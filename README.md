@@ -26,15 +26,21 @@ Backend
 
 NestJS
 TypeScript
+
 Prisma / TypeORM
+
 JWT Authentication
+
 MySQL / PostgreSQL
 
 Frontend
 
 Tauri
+
 React / Vue / Svelte
+
 Vite
+
 TailwindCSS (optionnel)
 
 Outils
@@ -44,10 +50,15 @@ Postman / Insomnia
 
 🗂️ Structure du projet
 aegisscan/
+
 ├── backend/
+
 ├── frontend/
+
 ├── database/
+
 ├── docs/
+
 └── README.md
 
 🗄️ Base de données

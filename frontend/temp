@@ -1,1 +1,35 @@
 fichier temporaire
+
+frontend/
+│
+├── index.html              ← point d’entrée HTML
+├── package.json
+├── vite.config.js
+│
+├── src/
+│   ├── main.jsx            ← bootstrap React
+│   ├── App.jsx             ← composant racine
+│   │
+│   ├── pages/              ← pages (écrans)
+│   │   ├── Login.jsx
+│   │   ├── Dashboard.jsx
+│   │   └── Settings.jsx
+│   │
+│   ├── components/         ← composants réutilisables
+│   │   ├── Navbar.jsx
+│   │   └── Sidebar.jsx
+│   │
+│   ├── services/           ← appels Tauri / API
+│   │   └── tauriApi.js
+│   │
+│   ├── assets/
+│   │   ├── styles/
+│   │   │   └── main.css
+│   │   ├── images/
+│   │   └── fonts/
+│   │
+│   └── router/
+│       └── index.jsx       ← React Router (optionnel)
+│
+└── public/
+    └── favicon.ico

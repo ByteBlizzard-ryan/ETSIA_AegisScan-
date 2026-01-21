@@ -34,78 +34,78 @@ export default function Login() {
 
   return (
     <AuthLayout>
-      <div className="text-center mb-8">
-        <h1
-          className="text-2xl font-bold mb-2"
-          style={{ color: "var(--foreground)" }}
-        >
-          Bon retour parmi nous
-        </h1>
-        <p style={{ color: "var(--muted-foreground)" }}>
-          Connectez-vous pour accéder à votre tableau de bord de sécurité
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="label" htmlFor="email">
-            Adresse email ou nom d'utilisateur
-          </label>
-          <input
-            id="email"
-            type="text"
-            className="input"
-            placeholder="exemple@gmail.com"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            required
-          />
+      <div className="mx-6 my-4">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--foreground)" }}>
+            Bon retour parmi nous
+          </h1>
+          <p style={{ color: "var(--muted-foreground)" }}>
+            Connectez-vous pour accéder à votre tableau de bord de sécurité
+          </p>
         </div>
 
-        <div>
-          <label className="label" htmlFor="password">
-            Mot de passe
-          </label>
-          <input
-            id="password"
-            type="password"
-            className="input"
-            placeholder="••••••••"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <div>
+            <label className="label" htmlFor="email">
+              Adresse email ou nom d'utilisateur
+            </label>
+            <input
+              id="email"
+              type="text"
+              className="input"
+              placeholder="exemple@gmail.com"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              required
+            />
+          </div>
 
-        <div className="text-center">
-          <Link
-            to="/forgot-password"
-            className="text-sm"
-            style={{ color: "var(--primary)" }}
+          <div>
+            <label className="label" htmlFor="password">
+              Mot de passe
+            </label>
+            <input
+              id="password"
+              type="password"
+              className="input"
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              required
+            />
+          </div>
+
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="text-right"
+              style={{ color: "#6BA5E4", textDecoration: "underline" }}
+            >
+              Mot de passe oublié?
+            </Link>
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary w-full py-3"
+            disabled={isLoading}
           >
-            Mot de passe oublié?
-          </Link>
-        </div>
+            {isLoading ? "Connexion..." : "Se connecter"}
+          </button>
 
-        <div className="text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
-          Pas encore de compte?{" "}
-          <Link to="/register" style={{ color: "var(--primary)" }}>
-            S'inscrire gratuitement
-          </Link>
-        </div>
+          <div className="text-center text-right" style={{ color: "var(--muted-foreground)" }}>
+            Pas encore de compte?{" "}
+            <Link to="/register" style={{ color: "#6BA5E4" , textDecoration: "underline"}}>
+              S'inscrire gratuitement
+            </Link>
+          </div>
 
-        <button
-          type="submit"
-          className="btn btn-primary w-full py-3"
-          disabled={isLoading}
-        >
-          {isLoading ? "Connexion..." : "Se connecter"}
-        </button>
-      </form>
+        </form>
+      </div>
     </AuthLayout>
   );
 }

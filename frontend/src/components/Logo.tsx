@@ -9,13 +9,13 @@ export default function Logo({ size = "md", showText = true }: LogoProps) {
   const sizes = {
     sm: { icon: 32, text: "text-[32px]" },
     md: { icon: 48, text: "text-[48px]" },
-    lg: { icon: 50, text: "text-[40px]" },
+    lg: { icon: 50, text: "text-[30px]" },
   };
 
   const { icon, text } = sizes[size];
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center ">
       <img
         src={logoImg}
         alt="Logo AegisScan"

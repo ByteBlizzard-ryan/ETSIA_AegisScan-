@@ -12,7 +12,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         <div
           className="w-full max-w-[500px] bg-[#ECF7FF] rounded-xl shadow-lg transition-all"
         >
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-6">
             <Logo size="lg" />
           </div>
           {children}

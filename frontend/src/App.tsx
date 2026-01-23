@@ -10,6 +10,9 @@ import Profil from "./pages/Profil";
 import Historique from "./pages/Historique";
 //import LiensBloques from "./pages/LiensBloques";
 import Statistiques from "./pages/Statistiques";
+import Pricing from "./pages/pricing.tsx";
+import PrivacyPolicy from "./pages/privacy-policy.tsx";
+import Landing from "./pages/landing.tsx";
 
 function App() {
   return (
@@ -34,6 +37,9 @@ function App() {
         // Ali utilise ce canva pour tes routes
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/statistiques" element={<Statistiques />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/landing" element={<Landing />} />
 
 
     </Routes>

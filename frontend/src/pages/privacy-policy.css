@@ -1,0 +1,203 @@
+.privacy-container {
+    min-height: 100vh;
+    background-color: #f8fafb;
+    display: flex;
+    flex-direction: column;
+}
+
+.privacy-content {
+    flex: 1;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 40px 24px 32px;
+    background-color: #ffffff;
+    min-height: calc(100vh - 60px);
+}
+
+/* Title */
+.privacy-title {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a2b3c;
+    margin-bottom: 16px;
+    line-height: 1.3;
+}
+
+/* Introduction */
+.privacy-intro {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    color: #3a4a5a;
+    line-height: 1.7;
+    margin-bottom: 28px;
+    text-align: justify;
+}
+
+/* Section */
+.privacy-section {
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a6a9a;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.section-text {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    color: #3a4a5a;
+    line-height: 1.7;
+    text-align: justify;
+}
+
+/* Lists */
+.privacy-list {
+    list-style: disc;
+    padding-left: 24px;
+    margin: 12px 0;
+}
+
+.privacy-list li {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    color: #3a4a5a;
+    line-height: 1.7;
+    margin-bottom: 6px;
+}
+
+.privacy-list li:last-child {
+    margin-bottom: 0;
+}
+
+/* Note text */
+.note-text {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    color: #3a4a5a;
+    line-height: 1.7;
+    margin-top: 12px;
+    text-align: justify;
+}
+
+/* Email link */
+.email-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.email-container .text {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    color: #3a4a5a;
+    line-height: 1.7;
+    text-align: justify;
+}
+
+.email-icon {
+    width: 16px;
+    height: 16px;
+    color: #1a6a9a;
+    flex-shrink: 0;
+}
+
+.email-link {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    color: #1a5a7a;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.email-link:hover {
+    color: #1a8a6a;
+}
+
+/* Back button */
+.back-button-container {
+    margin-top: 32px;
+    margin-bottom: 16px;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    background-color: #ffffff;
+    border: 1px solid #1a5a7a;
+    border-radius: 6px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a5a7a;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.back-button:hover {
+    background-color: #f0f7fa;
+}
+
+.back-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Footer */
+.privacy-footer {
+    background-color: #ffffff;
+    border-top: 1px solid #e8ecef;
+    padding: 16px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.privacy-footer p {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px;
+    color: #6a7a8a;
+}
+
+.privacy-footer a {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px;
+    color: #1a5a7a;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.privacy-footer a:hover {
+    color: #1a8a6a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .privacy-content {
+        padding: 24px 16px;
+    }
+
+    .privacy-title {
+        font-size: 22px;
+    }
+
+    .section-title {
+        font-size: 16px;
+    }
+
+    .privacy-footer {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+}

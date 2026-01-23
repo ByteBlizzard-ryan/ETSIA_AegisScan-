@@ -1,5 +1,4 @@
-"use client"
-
+import { Link } from "react-router-dom";
 import "./landing.css"
 
 export default function Landing() {
@@ -15,10 +14,10 @@ export default function Landing() {
                     <span>AegisScan</span>
                 </div>
                 <nav className="header-nav">
-                    <a href="#">Accueil</a>
-                    <a href="#">Fonctionnalités</a>
+                    <Link to="/">Accueil</Link>
+                    <Link to="/features">Fonctionnalités</Link>
                 </nav>
-                <button className="header-btn">Telechargez AegisScan</button>
+                <button className="header-btn">Téléchargez AegisScan</button>
             </header>
 
             {/* Hero Section */}
@@ -27,8 +26,8 @@ export default function Landing() {
                     Sécurisez votre navigation avec une analyse proactive
                 </h1>
                 <p className="hero-subtitle">
-                    AegisScan intercepte, analyse et bloque les liens malveillans avant que vous ne
-                    cliquez. Protegez-vous contre le phishing et les cybermenaces en temps reel.
+                    AegisScan intercepte, analyse et bloque les liens malveillants avant que vous ne
+                    cliquez. Protégez-vous contre le phishing et les cybermenaces en temps réel.
                 </p>
 
                 {/* Analysis Box */}
@@ -64,7 +63,7 @@ export default function Landing() {
                     </div>
                 </div>
 
-                <button className="download-btn">Telecharger gratuitement</button>
+                <button className="download-btn">Télécharger gratuitement</button>
             </section>
 
             {/* How It Works Section */}
@@ -81,7 +80,7 @@ export default function Landing() {
                             </svg>
                         </div>
                         <h3 className="step-title">Interception</h3>
-                        <p className="step-desc">Les liens sont analysé avant meme votre clic</p>
+                        <p className="step-desc">Les liens sont analysés avant même votre clic</p>
                     </div>
 
                     <div className="step-arrow">
@@ -102,7 +101,7 @@ export default function Landing() {
                             </svg>
                         </div>
                         <h3 className="step-title">Analyse</h3>
-                        <p className="step-desc">Detection avancee des menaces en temps reel.</p>
+                        <p className="step-desc">Détection avancée des menaces en temps réel.</p>
                     </div>
 
                     <div className="step-arrow">
@@ -122,7 +121,7 @@ export default function Landing() {
                             </svg>
                         </div>
                         <h3 className="step-title">Blocage</h3>
-                        <p className="step-desc">Acces immediat aux sites dangereux bloque.</p>
+                        <p className="step-desc">Accès immédiat aux sites dangereux bloqué.</p>
                     </div>
                 </div>
             </section>
@@ -130,7 +129,7 @@ export default function Landing() {
             {/* Why Section */}
             <section className="why-section">
                 <h2 className="section-title">Pourquoi choisir AegisScan ?</h2>
-                <p className="why-subtitle">{"Des outils puissants pour une tranquilite d'esprit totale"}</p>
+                <p className="why-subtitle">{"Des outils puissants pour une tranquillité d'esprit totale"}</p>
 
                 <div className="features-container">
                     {/* Feature 1 */}
@@ -140,7 +139,7 @@ export default function Landing() {
                                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                             </svg>
                         </div>
-                        <h3 className="feature-title">Analyse en temps reel</h3>
+                        <h3 className="feature-title">Analyse en temps réel</h3>
                         <p className="feature-desc">
                             Aucune latence perceptible. Vos liens sont vérifiés instantanément sans ralentir votre navigation.
                         </p>
@@ -156,9 +155,9 @@ export default function Landing() {
                                 <path d="M8 9l4-3 4 3" />
                             </svg>
                         </div>
-                        <h3 className="feature-title">Education continu</h3>
+                        <h3 className="feature-title">Éducation continue</h3>
                         <p className="feature-desc">
-                            Apprenez a reconnaitre les menaces grace a nos conseils contextuels et nos mini-guides
+                            Apprenez à reconnaître les menaces grâce à nos conseils contextuels et nos mini-guides
                         </p>
                     </div>
 
@@ -172,23 +171,23 @@ export default function Landing() {
                         </div>
                         <h3 className="feature-title">Multiplateforme</h3>
                         <p className="feature-desc">
-                            Protegez vos e-mails, reseaux sociaux et messages, que vous soyez sur mobile ou ordinateur
+                            Protégez vos e-mails, réseaux sociaux et messages, que vous soyez sur mobile ou ordinateur
                         </p>
                     </div>
                 </div>
 
-                <button className="features-link-btn">Voir toutes les fonctionnalites en detail</button>
+                <Link to="/features" className="features-link-btn">Voir toutes les fonctionnalités en détail</Link>
             </section>
 
             {/* CTA Section */}
             <section className="cta-section">
-                <h2 className="cta-title">Pret a proteger votre vie numerique ?</h2>
-                <button className="cta-btn">Telecharger maintenant</button>
+                <h2 className="cta-title">Prêt à protéger votre vie numérique ?</h2>
+                <button className="cta-btn">Télécharger maintenant</button>
             </section>
 
             {/* Footer */}
             <footer className="footer">
-                <p>@ 2026 AegisScan. Tous droites reserves</p>
+                <p>© 2026 AegisScan. Tous droits réservés</p>
             </footer>
         </div>
     )

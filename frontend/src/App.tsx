@@ -13,6 +13,7 @@ import Statistiques from "./pages/Statistiques";
 import Pricing from "./pages/pricing.tsx";
 import PrivacyPolicy from "./pages/privacy-policy.tsx";
 import Landing from "./pages/landing.tsx";
+import Features from "./pages/features.tsx";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/landing" element={<Landing />} />
+        <Route path="/features" element={<Features />} />
 
 
     </Routes>

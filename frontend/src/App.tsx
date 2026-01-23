@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-//import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard";
 //import Conseils from "./pages/Conseils";
 //import Article from "./pages/Article";
 //import Quiz from "./pages/Quiz";
@@ -9,7 +9,7 @@ import Register from "./pages/Register";
 import Profil from "./pages/Profil";
 import Historique from "./pages/Historique";
 //import LiensBloques from "./pages/LiensBloques";
-//import Statistiques from "./pages/Statistiques";
+import Statistiques from "./pages/Statistiques";
 
 function App() {
   return (
@@ -32,11 +32,9 @@ function App() {
       */}
 
         // Ali utilise ce canva pour tes routes
-      {/*
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/statistiques" element={<Statistiques />} />
-      ...............
-      */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/statistiques" element={<Statistiques />} />
+
 
     </Routes>
   );

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
     Link2,
     ShieldOff,
@@ -5,7 +6,7 @@ import {
     Target,
     CheckCircle,
     LayoutDashboard,
-    List,
+    History,
     BarChart3,
     HelpCircle,
     User,
@@ -14,7 +15,6 @@ import {
     Shield,
     Diamond
 } from "lucide-react"
-
 import "./statistiques.css"
 
 export default function Statistiques() {
@@ -29,38 +29,38 @@ export default function Statistiques() {
                     </div>
 
                     <nav className="nav-menu">
-                        <a href="#" className="nav-item">
+                        <Link to="/dashboard" className="nav-item">
                             <LayoutDashboard />
                             <span>Dashboard</span>
-                        </a>
-                        <a href="#" className="nav-item">
-                            <List />
+                        </Link>
+                        <Link to="/historique" className="nav-item">
+                            <History />
                             <span>Historique</span>
-                        </a>
-                        <a href="#" className="nav-item">
+                        </Link>
+                        <Link to="/liens-bloques" className="nav-item">
                             <ShieldOff />
                             <span>Liens bloqués</span>
-                        </a>
-                        <a href="#" className="nav-item active">
+                        </Link>
+                        <Link to="/statistiques" className="nav-item active">
                             <BarChart3 />
                             <span>Statistiques</span>
-                        </a>
-                        <a href="#" className="nav-item">
+                        </Link>
+                        <Link to="/conseils" className="nav-item">
                             <HelpCircle />
                             <span>Conseils</span>
-                        </a>
-
-                        <div className="nav-bottom">
-                            <a href="#" className="nav-item">
-                                <User />
-                                <span>Profil</span>
-                            </a>
-                            <a href="#" className="nav-item">
-                                <LogOut />
-                                <span>Quitter</span>
-                            </a>
-                        </div>
+                        </Link>
                     </nav>
+
+                    <div className="nav-bottom">
+                        <Link to="/profil" className="nav-item">
+                            <User />
+                            <span>Profil</span>
+                        </Link>
+                        <button className="nav-item logout-btn">
+                            <LogOut />
+                            <span>Quitter</span>
+                        </button>
+                    </div>
                 </aside>
 
                 {/* Main Content */}
@@ -239,7 +239,7 @@ export default function Statistiques() {
             {/* Footer */}
             <footer className="footer">
                 <p>© 2026 AegisScan. Tous droits réservés</p>
-                <a href="#">Politique de confidentialité</a>
+                <Link to="/privacy">Politique de confidentialité</Link>
             </footer>
         </div>
     )

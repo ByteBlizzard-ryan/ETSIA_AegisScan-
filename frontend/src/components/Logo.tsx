@@ -7,26 +7,22 @@ interface LogoProps {
 
 export default function Logo({ size = "md", showText = true }: LogoProps) {
   const sizes = {
-    sm: { icon: 32, text: "text-[32px]" },
-    md: { icon: 48, text: "text-[48px]" },
-    lg: { icon: 50, text: "text-[30px]" },
+    sm: { icon: "w-6 h-6", text: "text-sm" },
+    md: { icon: "w-12 h-16", text: "text-xl" },
+    lg: { icon: "w-12 h-12", text: "text-2xl" },
   };
 
   const { icon, text } = sizes[size];
 
   return (
-    <div className="flex items-center ">
-      <img
-        src={logoImg}
-        alt="Logo AegisScan"
-        width={icon}
-        height={icon}
-      />
+    <div className="flex items-center gap-2.5">
+      <div className={`${icon} text-[#1a9a7a]`}>
+        <img src={logoImg} alt="Logo" className="w-full h-full" />
+      </div>
 
       {showText && (
-        <span className={`font-bold ${text} flex gap-1`}>
-          <span className="font-bold" style={{ color: "#0E4D7A" }}>Aegis</span>
-          <span className="font-bold" style={{ color: "#21825B" }}>Scan</span>
+        <span className={`${text} font-semibold text-[#1a3a4a]`}>
+          Aegis<span className="text-[#1a9a7a]">Scan</span>
         </span>
       )}
     </div>

@@ -9,8 +9,8 @@ import {
   HelpCircle,
   User,
   LogOut,
-  Shield,
 } from "lucide-react";
+import Logo from "./Logo";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -41,13 +41,8 @@ export default function Sidebar() {
   return (
     <aside className="w-[220px] bg-white border-r border-[#e8ecef] flex flex-col py-6 px-4">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-10 px-2">
-        <div className="w-9 h-9 text-[#1a9a7a]">
-          <Shield className="w-full h-full" />
-        </div>
-        <span className="text-xl font-semibold text-[#1a3a4a]">
-          Aegis<span className="text-[#1a9a7a]">Scan</span>
-        </span>
+      <div className="mb-10 px-2">
+        <Logo size="md" showText={true} />
       </div>
 
       {/* Navigation Menu */}

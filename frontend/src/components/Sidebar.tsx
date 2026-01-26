@@ -1,69 +1,91 @@
 'use client';
 
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   History,
   ShieldOff,
   BarChart3,
-  MessageCircle,
+  HelpCircle,
   User,
   LogOut,
+  Shield,
 } from "lucide-react";
-import Logo from "./Logo";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/historique", icon: History, label: "Historique" },
   { to: "/liens-bloques", icon: ShieldOff, label: "Liens bloqués" },
   { to: "/statistiques", icon: BarChart3, label: "Statistiques" },
-  { to: "/conseils", icon: MessageCircle, label: "Conseils" },
-  { to: "/profil", icon: User, label: "Profil" },
+  { to: "/conseils", icon: HelpCircle, label: "Conseils" },
 ];
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     // TODO: Implement logout logic with backend
     navigate("/login");
   };
 
+  // Custom function to check if a nav item should be active
+  const isNavItemActive = (itemPath: string) => {
+    // Special case: Historique should be active for both /historique and /signaler-un-faux
+    if (itemPath === "/historique") {
+      return location.pathname === "/historique" || location.pathname === "/signaler-un-faux";
+    }
+    return location.pathname === itemPath;
+  };
+
   return (
-    <aside
-      className="flex flex-col h-screen w-64 border-r"
-      style={{ backgroundColor: "#ffffff", borderColor: "var(--border)" }}
-    >
-      <div className="p-6">
-        <Logo size="md" />
+    <aside className="w-[220px] bg-white border-r border-[#e8ecef] flex flex-col py-6 px-4">
+      {/* Logo */}
+      <div className="flex items-center gap-2.5 mb-10 px-2">
+        <div className="w-9 h-9 text-[#1a9a7a]">
+          <Shield className="w-full h-full" />
+        </div>
+        <span className="text-xl font-semibold text-[#1a3a4a]">
+          Aegis<span className="text-[#1a9a7a]">Scan</span>
+        </span>
       </div>
 
-      <nav className="flex-1 px-4">
-        <ul className="space-y-1">
-          {navItems.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#e8f5e9] text-[#1e3a5f]"
-                      : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e3a5f]"
-                  }`
-                }
-              >
-                <item.icon size={20} />
-                {item.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+      {/* Navigation Menu */}
+      <nav className="flex-1 flex flex-col gap-1">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={
+              `flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium transition-all ${isNavItemActive(item.to)
+                ? "bg-[#e6f5f1] text-[#1a9a7a]"
+                : "text-[#5a6a7a] hover:bg-[#f0f7f5] hover:text-[#1a9a7a]"
+              }`
+            }
+          >
+            <item.icon size={20} />
+            {item.label}
+          </NavLink>
+        ))}
       </nav>
 
-      <div className="p-4 border-t" style={{ borderColor: "var(--border)" }}>
+      {/* Bottom Section */}
+      <div className="flex flex-col gap-1 mt-auto">
+        <NavLink
+          to="/profil"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium transition-all ${isActive
+              ? "bg-[#e6f5f1] text-[#1a9a7a]"
+              : "text-[#5a6a7a] hover:bg-[#f0f7f5] hover:text-[#1a9a7a]"
+            }`
+          }
+        >
+          <User size={20} />
+          Profil
+        </NavLink>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium w-full text-[#64748b] hover:bg-[#fee2e2] hover:text-[#991b1b] transition-colors"
+          className="flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium text-[#5a6a7a] hover:bg-[#f0f7f5] hover:text-[#1a9a7a] transition-all"
         >
           <LogOut size={20} />
           Quitter

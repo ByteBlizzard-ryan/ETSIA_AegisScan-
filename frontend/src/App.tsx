@@ -14,18 +14,19 @@ import Pricing from "./pages/pricing.tsx";
 import PrivacyPolicy from "./pages/privacy-policy.tsx";
 import Landing from "./pages/landing.tsx";
 import Features from "./pages/features.tsx";
+import SignalerUnFaux from "./pages/SignalerUnFaux";
 
 function App() {
   return (
     <Routes>
         // Reine utilise ce canva pour tes routes
-      <Route path="/" element={<Navigate to="/historique" replace />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/profil" element={<Profil />} />
       <Route path="/historique" element={<Historique />} />
       {/*<Route path="/detail/lien/:id" element={<Detail />} />*/}
-      {/*<Route path="/Siganalement/:id" element={<Detail />} />*/}
+      <Route path="/signaler-un-faux" element={<SignalerUnFaux />} />
 
 
         // Etienne utilise ce canva pour tes routes

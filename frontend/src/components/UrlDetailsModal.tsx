@@ -21,11 +21,6 @@ export default function UrlDetailsModal({ isOpen, onClose, urlData }: UrlDetails
 
     if (!isOpen || !urlData) return null;
 
-    const handleReportClick = () => {
-        onClose();
-        navigate('/signaler-un-faux');
-    };
-
     const getRiskDetails = (riskLevel: string) => {
         switch (riskLevel) {
             case 'Élevé':

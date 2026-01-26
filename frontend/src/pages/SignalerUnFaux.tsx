@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle } from "lucide-react";
 import MainLayout from "../components/MainLayout";
 import { useNavigate } from "react-router-dom";
 

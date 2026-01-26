@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import MainLayout from "../components/MainLayout";
 import UrlDetailsModal from "../components/UrlDetailsModal";
 

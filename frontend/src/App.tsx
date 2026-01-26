@@ -15,7 +15,7 @@ function App() {
   return (
     <Routes>
         // Reine utilise ce canva pour tes routes
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/historique" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/profil" element={<Profil />} />

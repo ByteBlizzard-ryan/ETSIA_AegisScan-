@@ -1,0 +1,235 @@
+.pricing-container {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f0f4f8 0%, #e8eef3 100%);
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pricing-header {
+    text-align: center;
+    margin-bottom: 50px;
+    max-width: 800px;
+}
+
+.pricing-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a2b3c;
+    margin: 0 0 16px 0;
+}
+
+.pricing-header p {
+    font-size: 15px;
+    color: #5a6a7a;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.pricing-cards {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+/* Card Base */
+.pricing-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px;
+    width: 380px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    position: relative;
+    border: 1px solid #e8ecf0;
+}
+
+.pricing-card.premium {
+    border: 2px solid #e8ecf0;
+}
+
+/* Recommended Badge */
+.recommended-badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #d4a017;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 20px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Plan Name */
+.plan-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a2b3c;
+    margin: 0 0 20px 0;
+}
+
+/* Price */
+.price-container {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.price-amount {
+    font-size: 48px;
+    font-weight: 700;
+    color: #1a2b3c;
+}
+
+.price-amount.premium {
+    color: #1a9a7a;
+}
+
+.price-currency {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a2b3c;
+}
+
+.price-currency.premium {
+    color: #1a9a7a;
+}
+
+.price-period {
+    font-size: 18px;
+    color: #6a7a8a;
+    font-weight: 400;
+}
+
+/* Description */
+.plan-description {
+    font-size: 14px;
+    color: #6a7a8a;
+    line-height: 1.5;
+    margin-bottom: 28px;
+    min-height: 42px;
+}
+
+/* Features List */
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 32px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.feature-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.feature-icon.check {
+    color: #3a9ac0;
+}
+
+.feature-icon.check-green {
+    color: #2a9a6a;
+}
+
+.feature-icon.warning {
+    color: #d4a017;
+}
+
+.feature-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.feature-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a2b3c;
+}
+
+.feature-description {
+    font-size: 13px;
+    color: #8a9aaa;
+    line-height: 1.4;
+}
+
+/* Buttons */
+.pricing-button {
+    width: 100%;
+    padding: 16px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: auto;
+}
+
+.pricing-button.outline {
+    background: transparent;
+    border: 2px solid #d0d8e0;
+    color: #3a4a5a;
+}
+
+.pricing-button.outline:hover {
+    background: #f5f7f9;
+    border-color: #b0b8c0;
+}
+
+.pricing-button.filled {
+    background: #1a5a6a;
+    border: none;
+    color: #ffffff;
+}
+
+.pricing-button.filled:hover {
+    background: #144a58;
+}
+
+/* Responsive */
+@media (max-width: 840px) {
+    .pricing-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .pricing-card {
+        width: 100%;
+        max-width: 400px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-container {
+        padding: 40px 20px;
+    }
+
+    .pricing-card {
+        padding: 30px;
+    }
+
+    .pricing-header h1 {
+        font-size: 26px;
+    }
+
+    .price-amount {
+        font-size: 40px;
+    }
+}

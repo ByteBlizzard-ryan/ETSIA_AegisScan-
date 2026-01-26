@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "./features.css"
+import "../styles/features.css"
 
 export default function Features() {
     return (

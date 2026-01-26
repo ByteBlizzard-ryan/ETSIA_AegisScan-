@@ -15,7 +15,7 @@ import {
     Shield,
     Diamond
 } from "lucide-react"
-import "./statistiques.css"
+import "../styles/statistiques.css"
 
 export default function Statistiques() {
     return (

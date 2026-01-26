@@ -1,6 +1,6 @@
 "use client"
 
-import "./privacy-policy.css"
+import "../styles/privacy-policy.css"
 
 export default function PrivacyPolicy() {
     return (

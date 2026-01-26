@@ -1,6 +1,6 @@
 "use client"
 
-import "./pricing.css"
+import "../styles/pricing.css"
 
 function CheckIcon({ className }: { className?: string }) {
     return (

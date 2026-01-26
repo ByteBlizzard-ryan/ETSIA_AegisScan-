@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "./dashboard.css"
+import "../styles/dashboard.css"
 
 // Icons Components
 import {

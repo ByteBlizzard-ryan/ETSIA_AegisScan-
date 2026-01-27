@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
+// Importations de tes modules de base de données (BD)
 import { UtilisateurModule } from 'BD/Utilisateur/utilisateur.module';
 import { PlanAbonnementModule } from 'BD/plan_abonnement/plan_abonnement.module';
 import { AbonnementModule } from 'BD/abonnement/abonnement.module';
@@ -26,16 +29,28 @@ import { AnalyticsEventsModule } from 'BD/analytics_events/analytics_events.modu
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: "G'abyno23aot#snk4",
-      database: 'AegisScan',
-      autoLoadEntities: true,
-      synchronize: true, // créer automatiquement les tables
+    // Configuration pour lire le fichier .env
+    ConfigModule.forRoot({
+      isGlobal: true, // Rend les variables accessibles dans tous les modules
     }),
+
+    // Configuration de TypeORM utilisant les variables d'environnement
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DATABASE_HOST', 'localhost'),
+        port: configService.get<number>('DATABASE_PORT', 5432),
+        username: configService.get<string>('DATABASE_USER', 'postgres'),
+        password: configService.get<string>('DATABASE_PASSWORD'),
+        database: configService.get<string>('DATABASE_NAME', 'AegisScan'),
+        autoLoadEntities: true, // Charge automatiquement les entités décorées @Entity()
+        synchronize: true,     // Crée les tables automatiquement (uniquement en DEV)
+      }),
+    }),
+
+    // Liste de tes modules fonctionnels
     UtilisateurModule,
     PlanAbonnementModule,
     AbonnementModule,
@@ -59,7 +74,6 @@ import { AnalyticsEventsModule } from 'BD/analytics_events/analytics_events.modu
     AssistantIAModule,
     UserSessionsModule,
     AnalyticsEventsModule,
-
   ],
 })
 export class AppModule {}

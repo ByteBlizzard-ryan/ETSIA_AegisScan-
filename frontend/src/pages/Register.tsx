@@ -17,40 +17,43 @@ export default function Register() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+//Fonction handleSubmit mise à jour pour gérer les erreurs du DTO et recevoir les données depuis la base de données
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setIsLoading(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  try {
+    const response = await fetch('http://localhost:3000/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        acceptTerms: formData.acceptTerms
+      })
+    });
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
-      return;
+    const data = await response.json();
+
+    if (!response.ok) {
+      // ICI : On récupère le message précis du DTO
+      if (data.message) {
+        // Si c'est un tableau (plusieurs erreurs), on prend la première
+        const errorMsg = Array.isArray(data.message) ? data.message[0] : data.message;
+        throw new Error(errorMsg);
+      }
+      throw new Error("Une erreur est survenue");
     }
 
-    if (!formData.acceptTerms) {
-      setError("Vous devez accepter les conditions d'utilisation");
-      return;
-    }
-
-    setIsLoading(true);
-
-    // TODO: Implement register API call to NestJS backend
-    // Example:
-    // const response = await fetch('http://localhost:3000/auth/register', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     username: formData.username,
-    //     email: formData.email,
-    //     password: formData.password
-    //   })
-    // });
-
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/dashboard");
-    }, 1000);
-  };
+    navigate("/dashboard");
+  } catch (err: any) {
+    setError(err.message); 
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <AuthLayout>

@@ -1,8 +1,6 @@
 'use client';
 
-import React from "react"
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
 
@@ -13,27 +11,85 @@ export default function Login() {
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  // État pour afficher les erreurs
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null); // Réinitialise l'erreur au début de la tentative
 
-    // TODO: Implement login API call to NestJS backend
-    // Example:
-    // const response = await fetch('http://localhost:3000/auth/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(formData)
-    // });
+    try {
+      const response = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-    setTimeout(() => {
-      setIsLoading(false);
+      const data = await response.json();
+
+      if (!response.ok) {
+        // On récupère le message d'erreur du backend NestJS (UnauthorizedException)
+        throw new Error(data.message || "Identifiants incorrects");
+      }
+
+      console.log("Connexion réussie !");
+
+      // --- LES ÉTAPES CRUCIALES ---
+      // 1. On stocke le token JWT (indispensable pour les futurs fetch)
+      localStorage.setItem("token", data.access_token);
+      
+      // 2. On stocke les infos utilisateur (pour afficher le nom sur le dashboard)
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // 3. Redirection vers le dashboard
       navigate("/dashboard");
-    }, 1000);
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <AuthLayout>
+      {/* Popup pour l'affichage des messages d'erreurs */}
+      {error && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4 transform animate-in fade-in zoom-in duration-200">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                Erreur de connexion
+              </h3>
+              
+              <div className="mt-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {error}
+                </p>
+              </div>
+
+              <div className="mt-6">
+                <button
+                  onClick={() => setError(null)}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:text-sm"
+                >
+                  Réessayer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="mx-6 my-4">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--foreground)" }}>
@@ -44,14 +100,14 @@ export default function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-10">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="label" htmlFor="email">
-              Adresse email ou nom d'utilisateur
+              Adresse email
             </label>
             <input
               id="email"
-              type="text"
+              type="email" // Changé en type email pour validation HTML5
               className="input"
               placeholder="exemple@gmail.com"
               value={formData.email}
@@ -82,10 +138,10 @@ export default function Login() {
           <div className="flex justify-end">
             <Link
               to="/forgot-password"
-              className="text-right"
+              className="text-sm"
               style={{ color: "#6BA5E4", textDecoration: "underline" }}
             >
-              Mot de passe oublié?
+              Mot de passe oublié ?
             </Link>
           </div>
 
@@ -94,16 +150,15 @@ export default function Login() {
             className="btn btn-primary w-full py-3"
             disabled={isLoading}
           >
-            {isLoading ? "Connexion..." : "Se connecter"}
+            {isLoading ? "Connexion en cours..." : "Se connecter"}
           </button>
 
-          <div className="text-center text-right" style={{ color: "var(--muted-foreground)" }}>
-            Pas encore de compte?{" "}
-            <Link to="/register" style={{ color: "#6BA5E4" , textDecoration: "underline"}}>
+          <div className="text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+            Pas encore de compte ?{" "}
+            <Link to="/register" style={{ color: "#6BA5E4", textDecoration: "underline" }}>
               S'inscrire gratuitement
             </Link>
           </div>
-
         </form>
       </div>
     </AuthLayout>

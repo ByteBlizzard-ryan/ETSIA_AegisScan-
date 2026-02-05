@@ -26,7 +26,8 @@ import { AssistanceModule } from 'BD/assistance/assistance.module';
 import { AssistantIAModule } from 'BD/assistant_ia/assistant_ia.module';
 import { UserSessionsModule } from 'BD/user_sessions/user_sessions.module';
 import { AnalyticsEventsModule } from 'BD/analytics_events/analytics_events.module';
-
+import { AuthModule } from 'BD/Utilisateur/authentification/Auth.module';
+import { AnalysesLien } from 'BD/analyses_lien/analyses_lien.entity';
 @Module({
   imports: [
     // Configuration pour lire le fichier .env
@@ -74,6 +75,7 @@ import { AnalyticsEventsModule } from 'BD/analytics_events/analytics_events.modu
     AssistantIAModule,
     UserSessionsModule,
     AnalyticsEventsModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

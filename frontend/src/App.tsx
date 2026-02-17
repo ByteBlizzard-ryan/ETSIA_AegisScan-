@@ -30,11 +30,13 @@ function App() {
 
 
         // Etienne utilise ce canva pour tes routes
-      {/*
-      <Route path="/liens-bloques" element={<LiensBloques />} />
-      <Route path="/conseils" element={<Conseils />} />
-      ...............
-      */}
+      <Route path="/liens-bloques" element={<LiensBloques />} />*/}
+      <Route path="/monapprentissage" element={<MonApprentissage />} />
+      <Route path="/progression"      element={<Progression />} />
+      <Route path="/quiz/result"      element={<QuizResult />} />
+      <Route path="/lien-bloque"      element={<LienBloque />} />
+      <Route path="/phishing-quiz"    element={<PhishingQuiz />} />
+      <Route path="/phishing-article" element={<PhishingArticle />} />
 
         // Ali utilise ce canva pour tes routes
         <Route path="/dashboard" element={<Dashboard />} />
@@ -50,3 +52,4 @@ function App() {
 }
 
 export default App;
+

@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function Footer() {
   return (
     <footer
@@ -9,13 +11,13 @@ export default function Footer() {
       }}
     >
       <span>&copy; 2026 AegisScan. Tous droits réservés</span>
-      <a
-        href="#"
+      <Link
+        to="/privacy-policy"
         className="hover:underline"
         style={{ color: "var(--primary)" }}
       >
         Politique de confidentialité
-      </a>
+      </Link>
     </footer>
   );
 }

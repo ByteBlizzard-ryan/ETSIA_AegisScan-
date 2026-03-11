@@ -31,6 +31,7 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
+        
         // On récupère le message d'erreur du backend NestJS (UnauthorizedException)
         throw new Error(data.message || "Identifiants incorrects");
       }

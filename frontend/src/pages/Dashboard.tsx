@@ -12,6 +12,16 @@ import {
     ChevronDown
 } from "lucide-react";
 
+// 1. Définition de la structure des données
+interface AnalyseData {
+    lien: {
+        url: string;
+    };
+    date_analyse: string;
+    niveau_risque: string;
+    statut: string;
+}
+
 // Custom SVG Icons
 const ShieldBlockIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -28,6 +38,12 @@ const LinkInputIcon = () => (
     </svg>
 );
 
+//Fonction pour garder le tableau des analyses de facon propre
+const truncateURL = (url:string, maxLength = 30) => {
+    if (url.length <= maxLength) return url;
+    return url.substring(0, maxLength) + "...";
+};
+
 export default function Dashboard() {
     // 1. ÉTATS (STATES) - Doivent être à l'intérieur du composant
     const [isLoading, setIsLoading] = useState(false);
@@ -40,12 +56,37 @@ export default function Dashboard() {
 
     const [user, setUser] = useState<{username: string} | null>(null);
 
-    useEffect(() => {
+        useEffect(() => {
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
             setUser(JSON.parse(savedUser));
         }
+
+        const fetchHistory = async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:3000/analyse-lien/historique', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data: AnalyseData[] = await response.json();
+                    // On formate les données de la DB pour qu'elles correspondent à ton tableau
+                    const formattedData = data.map(item => ({
+                        url: item.lien.url,
+                        date: new Date(item.date_analyse).toLocaleString(),
+                        risk: item.niveau_risque.toLowerCase(), // 'SÛR' -> 'sûr'
+                        status: item.statut.charAt(0).toUpperCase() + item.statut.slice(1) // 'bloqué' -> 'Bloqué'
+                    }));
+                    setAnalyses(formattedData);
+                }
+            } catch (error) {
+                console.error("Erreur historique:", error);
+            }
+        };
+
+        fetchHistory();
     }, []);
+
     const handleAnalyze = async () => {
     if (!urlInput) return alert("Veuillez entrer une URL");
 
@@ -132,7 +173,11 @@ export default function Dashboard() {
                         <tbody>
                             {analyses.map((item, index) => (
                                 <tr key={index}>
-                                    <td><a href="#" className="url-link">{item.url}</a></td>
+                                    <td>
+                                    <a href={item.url} target="_blank" rel="noreferrer" className="url-link">
+                                        {truncateURL(item.url)}
+                                    </a>
+                                </td>
                                     <td>{item.date}</td>
                                     <td>
                                         <span className={`risk-badge ${item.risk === "dangereux" ? "high" : item.risk === "suspect" ? "medium" : "low"}`}>

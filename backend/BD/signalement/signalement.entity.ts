@@ -12,15 +12,12 @@ import { AnalysesLien } from 'BD/analyses_lien/analyses_lien.entity';
 /* ENUMS STRICTEMENT IDENTIQUES */
 
 export enum TypeSignalement {
-  MENACE_DETECTEE = 'menace_detectee',
-  SIGNALEMENT = 'signalement',
-  STATUT_MODIFIE = 'statut_modifie',
-  RAPPORT_HEBDOMADAIRE = 'rapport_hebdomadaire',
-  SECURITE_URGENCE = 'securite_urgence',
-  INFO = 'info',
-  PROMOTION = 'promotion',
-  SYSTEME = 'systeme',
+  FAUX_NEGATIF = 'faux_negatif',
+  FAUX_POSITIF = 'faux_positif',
+  VRAI_POSITIF = 'vrai_positif',
+  VRAI_NEGATIF = 'vrai_negatif',
 }
+
 
 export enum NiveauUrgence {
   FAIBLE = 'faible',

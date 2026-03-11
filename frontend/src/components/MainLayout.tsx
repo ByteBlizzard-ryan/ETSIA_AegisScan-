@@ -41,7 +41,7 @@ export default function MainLayout({
           <p className="text-[13px] text-[#6a7a8a]">
             © 2026 AegisScan. Tous droits réservés
           </p>
-          <Link to="/privacy" className="text-[13px] text-[#1a5a6a] underline hover:text-[#1a9a7a]">
+          <Link to="/privacy-policy" className="text-[13px] text-[#1a5a6a] underline hover:text-[#1a9a7a]">
             Politique de confidentialité
           </Link>
         </footer>

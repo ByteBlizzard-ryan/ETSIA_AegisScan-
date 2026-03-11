@@ -1,232 +1,236 @@
 'use client';
 
-import { useState } from "react";
-import { Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Filter, ChevronLeft, ChevronRight, Search, Loader2 } from "lucide-react";
 import MainLayout from "../components/MainLayout";
 import UrlDetailsModal from "../components/UrlDetailsModal";
 
-const mockHistory = [
-  {
-    id: "1",
-    url: "https://faux-site-de-banque.com/login.html",
-    date: "2026-01-07 14:57",
-    riskLevel: "Modéré",
-    status: "Analysé",
-    source: "Navigation",
-  },
-  {
-    id: "2",
-    url: "https://actualite-info.biz/urgence-secu",
-    date: "2023-10-26 14:30",
-    riskLevel: "Élevé",
-    status: "Bloqué",
-    source: "Email",
-  },
-  {
-    id: "3",
-    url: "https://ma-banque-en-ligne.fr/login",
-    date: "2023-10-26 10:15",
-    riskLevel: "Moyen",
-    status: "Bloqué",
-    source: "Navigation",
-  },
-  {
-    id: "4",
-    url: "https://rapport-finance.com/Q3-2023",
-    date: "2023-10-25 18:45",
-    riskLevel: "Faible",
-    status: "Sûr",
-    source: "Email",
-  },
-  {
-    id: "5",
-    url: "https://e-commerce-promo.store/offres",
-    date: "2023-10-25 11:00",
-    riskLevel: "Moyen",
-    status: "Suspect",
-    source: "Navigation",
-  },
-  {
-    id: "6",
-    url: "https://support-technique-microsoft.com/aide",
-    date: "2023-10-24 09:20",
-    riskLevel: "Élevé",
-    status: "Bloqué",
-    source: "SMS",
-  },
-];
+// --- INTERFACES & TYPES ---
+interface AnalyseDB {
+    id_analyse: string;
+    date_analyse: string;
+    niveau_risque: string;
+    statut: string; // 'autorisé' | 'bloqué'
+    analyse_verdict_final: string;
+    lien: {
+        url: string;
+    };
+}
 
-const riskColors: Record<string, { bg: string; text: string; bgLight: string }> = {
-  Élevé: { bg: "#dc2626", text: "#ffffff", bgLight: "#fee2e2" },
-  Modéré: { bg: "#d97706", text: "#ffffff", bgLight: "#fef3c7" },
-  Moyen: { bg: "#d97706", text: "#ffffff", bgLight: "#fef3c7" },
-  Faible: { bg: "#059669", text: "#ffffff", bgLight: "#dcfce7" },
+const ITEMS_PER_PAGE = 8;
+
+// --- CONFIGURATION DES STYLES ---
+const riskColors: Record<string, string> = {
+    'DANGEREUX': "#dc2626",
+    'SUSPECT': "#d97706",
+    'SÛR': "#059669",
 };
 
-const statusColors: Record<string, { bg: string; text: string; bgLight: string }> = {
-  Analysé: { bg: "#2563eb", text: "#ffffff", bgLight: "#dbeafe" },
-  Bloqué: { bg: "#dc2626", text: "#ffffff", bgLight: "#fee2e2" },
-  Sûr: { bg: "#059669", text: "#ffffff", bgLight: "#dcfce7" },
-  Suspect: { bg: "#d97706", text: "#ffffff", bgLight: "#fef3c7" },
+const statusStyles: Record<string, { bg: string; text: string }> = {
+    'bloqué': { bg: "#fee2e2", text: "#dc2626" },
+    'autorisé': { bg: "#dcfce7", text: "#059669" },
 };
 
 export default function Historique() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [selectedUrl, setSelectedUrl] = useState<typeof mockHistory[0] | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+    // 1. ÉTATS (STATES)
+    const [history, setHistory] = useState<AnalyseDB[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    // États pour la Modal
+    const [selectedUrl, setSelectedUrl] = useState<AnalyseDB | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredHistory = mockHistory.filter((item) => {
-    const matchesSearch = item.url.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === "all" || item.status === filter;
-    return matchesSearch && matchesFilter;
-  });
+    // 2. RÉCUPÉRATION DES DONNÉES
+    useEffect(() => {
+        const fetchHistory = async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:3000/analyse-lien/historique', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setHistory(data);
+                }
+            } catch (error) {
+                console.error("Erreur historique:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchHistory();
+    }, []);
 
-  const handleRowClick = (item: typeof mockHistory[0]) => {
-    setSelectedUrl(item);
-    setIsModalOpen(true);
-  };
+    // 3. LOGIQUE DE FILTRAGE ET RECHERCHE (useMemo pour la performance)
+    const filteredData = useMemo(() => {
+        return history.filter((item) => {
+            const matchesSearch = item.lien.url.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesFilter = statusFilter === "all" || item.statut === statusFilter;
+            return matchesSearch && matchesFilter;
+        });
+    }, [history, searchTerm, statusFilter]);
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedUrl(null);
-  };
+    // 4. LOGIQUE DE PAGINATION
+    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedData = filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  return (
-    <>
-      <MainLayout title="Historique des analyses">
-        {/* Search and Filter */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative max-w-md">
-            <input
-              type="text"
-              className="input pl-10"
-              placeholder="Rechercher une URL..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    // Reset de la page quand on recherche ou filtre
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter]);
+
+    return (
+        <MainLayout title="Historique des analyses" subtitle="Retrouvez le détail de vos vérifications passées.">
+            
+            {/* BARRE DE RECHERCHE ET FILTRES */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4 flex-1 max-w-2xl">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            placeholder="Rechercher une URL dans votre historique..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    
+                    <div className="flex items-center gap-2 bg-white border px-3 py-2 rounded-lg">
+                        <Filter size={16} className="text-gray-400" />
+                        <select
+                            className="outline-none bg-transparent text-sm font-medium"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                        >
+                            <option value="all">Tous les statuts</option>
+                            <option value="autorisé">Autorisé</option>
+                            <option value="bloqué">Bloqué</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {/* TABLEAU DES DONNÉES */}
+            <div className="bg-white rounded-[5px] shadow-sm border border-gray-200 overflow-hidden">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+                        <tr>
+                            <th className="p-4 font-semibold uppercase tracking-wider">URL du lien</th>
+                            <th className="p-4 font-semibold uppercase tracking-wider">Date d'analyse</th>
+                            <th className="p-4 font-semibold uppercase tracking-wider">Verdict Final</th>
+                            <th className="p-4 font-semibold uppercase tracking-wider">Niveau de Risque</th>
+                            <th className="p-4 font-semibold uppercase tracking-wider">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan={5} className="p-12 text-center">
+                                    <div className="flex flex-col items-center gap-2 text-gray-500">
+                                        <Loader2 className="animate-spin" size={24} />
+                                        Chargement de vos données...
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : paginatedData.length > 0 ? (
+                            paginatedData.map((item) => (
+                                <tr 
+                                    key={item.id_analyse} 
+                                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                                    onClick={() => { setSelectedUrl(item); setIsModalOpen(true); }}
+                                >
+                                    <td rel="noreferrer" className="url-link p-4 max-w-[300px] truncate font-medium" title={item.lien.url}>
+                                        {item.lien.url}
+                                    </td>
+                                    <td className="p-4 text-gray-500">
+                                        {new Date(item.date_analyse).toLocaleString('fr-FR', {
+                                            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                        })}
+                                    </td>
+                                    <td className="p-4 text-gray-500">
+                                        {item.analyse_verdict_final || "Aucun verdict"}
+                                    </td>
+                                    <td className="p-4">
+                                        <span className="font" style={{ color: riskColors[item.niveau_risque] || "#374151" }}>
+                                            {item.niveau_risque}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">
+                                      <span className={`status-badge ${item.statut === "bloqué" ? "blocked" : "cleaned"}`}>
+                                          {item.statut}
+                                      </span>
+                                  </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={5} className="p-12 text-center text-gray-400">
+                                    Aucune analyse trouvée pour votre recherche.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* PAGINATION DYNAMIQUE */}
+            {!isLoading && totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 bg-white p-4 rounded-lg border shadow-sm">
+                    <p className="text-sm text-gray-500">
+                        Affichage de <span className="font-medium">{startIndex + 1}</span> à <span className="font-medium">{Math.min(startIndex + ITEMS_PER_PAGE, filteredData.length)}</span> sur <span className="font-medium">{filteredData.length}</span> analyses
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-md border hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        
+                        {/* Génération des numéros de page */}
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i + 1}
+                                onClick={() => handlePageChange(i + 1)}
+                                className={`w-10 h-10 rounded-md text-sm font-semibold transition-all ${
+                                    currentPage === i + 1 
+                                    ? "bg-blue-600 text-white shadow-md" 
+                                    : "hover:bg-gray-100 text-gray-600"
+                                }`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-md border hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL DE DÉTAILS */}
+            <UrlDetailsModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                urlData={selectedUrl}
             />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Filter size={18} style={{ color: "var(--muted-foreground)" }} />
-            <select
-              className="input w-auto"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="all">Tous les statuts</option>
-              <option value="Analysé">Analysé</option>
-              <option value="Bloqué">Bloqué</option>
-              <option value="Sûr">Sûr</option>
-              <option value="Suspect">Suspect</option>
-            </select>
-          </div>
-        </div>
-
-        {/* History Table */}
-        <div className="card p-0 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr
-                style={{
-                  backgroundColor: "#f8fafc",
-                  color: "var(--muted-foreground)",
-                }}
-              >
-                <th className="text-left p-4 font-medium">URL</th>
-                <th className="text-left p-4 font-medium">Date</th>
-                <th className="text-left p-4 font-medium">Source</th>
-                <th className="text-left p-4 font-medium">Niveau de risque</th>
-                <th className="text-left p-4 font-medium">Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredHistory.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-t hover:bg-gray-50 transition-colors cursor-pointer"
-                  style={{ borderColor: "var(--border)" }}
-                  onClick={() => handleRowClick(item)}
-                >
-                  <td className="p-4 max-w-[300px] truncate" title={item.url}>
-                    {item.url}
-                  </td>
-                  <td className="p-4">{item.date}</td>
-                  <td className="p-4">{item.source}</td>
-                  <td className="p-4">
-                    <span
-                      className="text-xs px-2 py-1 rounded-full font-medium"
-                      style={{
-                        backgroundColor: riskColors[item.riskLevel]?.bgLight || "#f3f4f6",
-                        color: riskColors[item.riskLevel]?.bg || "#374151",
-                      }}
-                    >
-                      {item.riskLevel}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className="text-xs px-2 py-1 rounded-full font-medium"
-                      style={{
-                        backgroundColor: statusColors[item.status]?.bgLight || "#f3f4f6",
-                        color: statusColors[item.status]?.bg || "#374151",
-                      }}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex items-center justify-between mt-6">
-          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-            Affichage de 1-{filteredHistory.length} sur {mockHistory.length} résultats
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              className="p-2 rounded border hover:bg-gray-50"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <ChevronLeft size={18} style={{ color: "var(--muted-foreground)" }} />
-            </button>
-            <button
-              className="w-8 h-8 rounded text-sm font-medium"
-              style={{ backgroundColor: "var(--primary)", color: "white" }}
-            >
-              1
-            </button>
-            <button
-              className="w-8 h-8 rounded text-sm hover:bg-gray-100"
-              style={{ color: "var(--muted-foreground)" }}
-            >
-              2
-            </button>
-            <button
-              className="w-8 h-8 rounded text-sm hover:bg-gray-100"
-              style={{ color: "var(--muted-foreground)" }}
-            >
-              3
-            </button>
-            <button
-              className="p-2 rounded border hover:bg-gray-50"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <ChevronRight size={18} style={{ color: "var(--muted-foreground)" }} />
-            </button>
-          </div>
-        </div>
-      </MainLayout>
-
-      {/* Modal */}
-      <UrlDetailsModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        urlData={selectedUrl}
-      />
-    </>
-  );
+        </MainLayout>
+    );
 }

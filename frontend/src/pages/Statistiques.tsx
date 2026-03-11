@@ -5,49 +5,170 @@ import {
     ShieldCheck,
     Target,
     CheckCircle,
-    ChevronDown,
     Diamond
 } from "lucide-react"
 import "../styles/statistiques.css"
+import { useState, useEffect } from "react";
+
+// 1. Define Types for TypeScript
+interface ChartData {
+    date: string;
+    count: number;
+}
+
+interface PieData {
+    label: string;
+    value: number;
+}
+
+interface StatsState {
+    totalLinks: number;
+    threatsDetected: number;
+    averageRiskScore: string | number;
+    protectionRate: string;
+    lineChart: ChartData[];
+    pieChart: PieData[];
+}
 
 export default function Statistiques() {
+
+    const COLORS_PERMANENT: Record<string, string> = {
+    "sûr": "#10b981",       // Vert (Permanent)
+    "suspect": "#f59e0b",    // Orange (Permanent)
+    "dangereux": "#ef4444",  // Rouge (Permanent)
+    "default": "#94a3b8"     // Gris (Si label inconnu)
+    };
+
+    // 2. Initialize state with full structure
+    const [stats, setStats] = useState<StatsState>({
+        totalLinks: 0,
+        threatsDetected: 0,
+        averageRiskScore: "N/A",
+        protectionRate: "100%",
+        lineChart: [], 
+        pieChart: []   
+    });
+
+    const [days, setDays] = useState(7);
+
+    useEffect(() => {
+        const loadStats = async () => {
+            try {
+                const token = localStorage.getItem('token'); 
+                if (!token) return;
+
+                const response = await fetch(`http://localhost:3000/stats?days=${days}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Fallback to empty arrays if backend keys are missing
+                    setStats({
+                        ...data,
+                        lineChart: data.lineChart || [],
+                        pieChart: data.pieChart || []
+                    });
+                }
+            } catch (error) {
+                console.error("Echec lors de la tentative de fetch les données", error);
+            }
+        };
+
+        loadStats();
+    }, [days]); 
+
+    // --- Dynamic Logic for Charts ---
+
+    const getLinePath = (data: ChartData[]) => {
+        if (!data || data.length < 2) return "M 0 180 L 400 180";
+        const maxVal = Math.max(...data.map(d => d.count), 1);
+        const points = data.map((d, i) => {
+            const x = (i / (data.length - 1)) * 400;
+            const y = 200 - (d.count / maxVal) * 160 - 20; // Scale with padding
+            return `${x},${y}`;
+        });
+        return `M ${points.join(" L ")}`;
+    };
+
+        const renderDonutSegments = () => {
+        const pieData = stats.pieChart || [];
+        const total = pieData.reduce((acc, curr) => acc + curr.value, 0);
+        if (total === 0) return <circle cx="50" cy="50" r="35" stroke="#e8ecef" strokeWidth="20" fill="none" />;
+
+        let offset = 0;
+
+        return pieData.map((item, i) => {
+            const percentage = (item.value / total) * 100;
+            const dashArray = `${(percentage * 219.9) / 100} 219.9`;
+            const dashOffset = (offset * 219.9) / 100;
+            offset += percentage;
+
+            // FORCE LA COULEUR : On cherche le label dans notre dictionnaire
+            // .toLowerCase() permet d'être sûr que "Sûr" ou "sûr" fonctionne
+            const segmentColor = COLORS_PERMANENT[item.label.toLowerCase()] || COLORS_PERMANENT.default;
+
+            return (
+                <circle
+                    key={`segment-${item.label}-${i}`}
+                    cx="50"
+                    cy="50"
+                    r="35"
+                    stroke={segmentColor} // Utilise la couleur fixe
+                    strokeWidth="20"
+                    fill="none"
+                    strokeDasharray={dashArray}
+                    strokeDashoffset={-dashOffset}
+                    style={{ transition: 'all 0.5s ease' }}
+                />
+            );
+        });
+    };
+
     return (
         <MainLayout title="Statistiques">
             {/* Header Actions */}
             <div className="flex justify-end mb-6">
-                <button className="date-selector">
-                    <span>Derniers 7 jours</span>
-                    <ChevronDown />
-                </button>
+                <select className="date-selector bg-white border border-gray-200 rounded px-4 py-2 flex items-center gap-2 cursor-pointer"
+                value={days}
+                onChange={(e) => setDays(Number(e.target.value))}>
+                    <option value={7}>Derniers 7 jours</option>
+                    <option value={30}>Derniers 30 jours</option>
+                    <option value={90}>Derniers 90 jours</option>
+                </select>
             </div>
 
-            {/* Stats Cards - Using StatCard component with Tailwind grid */}
+            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
                 <StatCard
                     title="Liens analysés"
-                    value={0}
-                    subtitle="+ 0% depuis le mois dernier"
+                    value={stats.totalLinks ?? 0}
+                    subtitle="Depuis le début"
                     icon={Link2}
                     iconColor="#4a8a9a"
                 />
                 <StatCard
                     title="Menaces détectées"
-                    value={0}
-                    subtitle="- 0% cette semaine"
+                    value={stats.threatsDetected ?? 0}
+                    subtitle="Activité totale"
                     icon={ShieldCheck}
                     iconColor="#1a9a7a"
                 />
                 <StatCard
                     title="Score de risque moyen"
-                    value="0/10"
+                    value={stats.averageRiskScore ?? "N/A"}
                     subtitle="Stable"
                     icon={Target}
                     iconColor="#4a8a9a"
                 />
                 <StatCard
                     title="Taux de protection"
-                    value="0%"
-                    subtitle="Excellent"
+                    value={stats.protectionRate ?? "100%"}
+                    subtitle="Efficacité du système"
                     icon={CheckCircle}
                     iconColor="#1a9a7a"
                 />
@@ -57,58 +178,36 @@ export default function Statistiques() {
             <div className="charts-section">
                 {/* Line Chart */}
                 <div className="chart-card">
-                    <h3 className="chart-title">Performance des Liens Analysés</h3>
+                    <h3 className="chart-title">Performance des Liens</h3>
                     <p className="chart-description">
-                        Nombre total et unique de liens analysés sur la période sélectionnée.
+                        Evolution de l'activité sur la période sélectionnée.
                     </p>
                     <div className="chart-container">
                         <div className="line-chart">
-                            <div className="chart-y-axis">
-                                <span>210</span>
-                                <span>175</span>
-                                <span>140</span>
-                                <span>105</span>
-                                <span>70</span>
-                            </div>
                             <div className="chart-area">
                                 <svg className="line-chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
-                                    {/* Grid lines */}
-                                    <line x1="0" y1="0" x2="400" y2="0" stroke="#e8ecef" strokeDasharray="4" />
                                     <line x1="0" y1="50" x2="400" y2="50" stroke="#e8ecef" strokeDasharray="4" />
                                     <line x1="0" y1="100" x2="400" y2="100" stroke="#e8ecef" strokeDasharray="4" />
                                     <line x1="0" y1="150" x2="400" y2="150" stroke="#e8ecef" strokeDasharray="4" />
-
-                                    {/* Total Liens line (blue) */}
+                                    
                                     <path
-                                        d="M 0 180 L 66 180 L 133 180 L 200 180 L 266 180 L 333 180 L 400 180"
+                                        d={getLinePath(stats.lineChart)}
                                         className="chart-line total"
-                                    />
-
-                                    {/* Liens Uniques line (green) */}
-                                    <path
-                                        d="M 0 190 L 66 190 L 133 190 L 200 190 L 266 190 L 333 190 L 400 190"
-                                        className="chart-line unique"
+                                        fill="none"
+                                        stroke="#4a8a9a"
+                                        strokeWidth="3"
+                                        style={{ transition: 'd 0.5s ease' }}
                                     />
                                 </svg>
                             </div>
                             <div className="chart-x-axis">
-                                <span>Lun 15</span>
-                                <span>Mar 16</span>
-                                <span>Mer 17</span>
-                                <span>Jeu 18</span>
-                                <span>Ven 19</span>
-                                <span>Sam 20</span>
-                                <span>Dim 21</span>
-                            </div>
-                        </div>
-                        <div className="chart-legend">
-                            <div className="legend-item">
-                                <span className="legend-dot blue"></span>
-                                <span>Total Liens</span>
-                            </div>
-                            <div className="legend-item">
-                                <span className="legend-dot green"></span>
-                                <span>Liens Uniques</span>
+                                {stats.lineChart.length > 0 ? (
+                                    stats.lineChart.map((d, i) => (
+                                        <span key={i}>{d.date.split('-').slice(2)}</span>
+                                    ))
+                                ) : (
+                                    <span>-</span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -116,45 +215,34 @@ export default function Statistiques() {
 
                 {/* Donut Chart */}
                 <div className="chart-card">
-                    <h3 className="chart-title">Distribution des Menaces par gravité</h3>
+                    <h3 className="chart-title">Distribution des Menaces</h3>
                     <p className="chart-description">
-                        Répartition des menaces détectées par niveau de gravité.
+                        Répartition par niveau de gravité.
                     </p>
                     <div className="chart-container">
                         <div className="donut-chart-container">
                             <div className="donut-chart">
                                 <svg viewBox="0 0 100 100">
-                                    {/* Background circle */}
                                     <circle cx="50" cy="50" r="35" stroke="#e8ecef" strokeWidth="20" fill="none" />
-
-                                    {/* Empty state */}
-                                    <circle
-                                        cx="50"
-                                        cy="50"
-                                        r="35"
-                                        stroke="#9aa5b0"
-                                        strokeWidth="20"
-                                        fill="none"
-                                        strokeDasharray="0 220"
-                                        strokeDashoffset="0"
-                                    />
+                                    {renderDonutSegments()}
                                 </svg>
-                                <div className="donut-labels">
-                                    <span className="donut-label" style={{ top: "15%", right: "15%" }}>
-                                        0
-                                    </span>
-                                    <span className="donut-label" style={{ top: "40%", right: "0%" }}>
-                                        0
-                                    </span>
-                                    <span className="donut-label" style={{ bottom: "20%", right: "25%" }}>
-                                        0
-                                    </span>
+                                <div className="donut-labels-list mt-4">
+                                    {(stats.pieChart || []).map((item, i) => (
+                                        <div key={i} className="flex justify-between text-xs mb-1">
+                                            <div className="flex items-center gap-1">
+                                                <div 
+                                                    className="w-2 h-2 rounded-full" 
+                                                    style={{ 
+                                                        // On utilise la même logique de couleur ici
+                                                        backgroundColor: COLORS_PERMANENT[item.label.toLowerCase()] || COLORS_PERMANENT.default 
+                                                    }}
+                                                ></div>
+                                                <span className="capitalize">{item.label}</span>
+                                            </div>
+                                            <span className="font-bold">{item.value}</span>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
-                            <div className="chart-pagination">
-                                <span className="pagination-dot active"></span>
-                                <span className="pagination-dot"></span>
-                                <span className="pagination-dot"></span>
                             </div>
                         </div>
                     </div>

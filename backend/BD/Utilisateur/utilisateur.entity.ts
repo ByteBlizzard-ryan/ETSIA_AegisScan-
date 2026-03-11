@@ -5,7 +5,7 @@ export enum TypeCompte {
   ADMINISTRATEUR = 'administrateur',
 }
 
-@Entity('utilisateurs') // nom de la table en français
+@Entity('utilisateurs') // nom de la table 
 export class Utilisateur {
   @PrimaryGeneratedColumn('uuid')
   id_utilisateur: string;

@@ -118,4 +118,13 @@ export class AnalyseLienService {
     await this.lienRepo.save(lien);
     return await this.analyseRepo.save(newAnalyse);
   }
+// Pour l'affichage de l'historique des analyses dans le dashboard
+    async getUserHistory(userId: string) {
+    return await this.analyseRepo.find({
+      where: { utilisateur: { id_utilisateur: userId } },
+      relations: ['lien'], // Pour récupérer l'objet 'lien' et donc son URL
+      order: { date_analyse: 'DESC' }, // Les plus récentes en premier
+      take: 10 // Limiter aux 10 dernières par exemple
+    });
+  }
 }

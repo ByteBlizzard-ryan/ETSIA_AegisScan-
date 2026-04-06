@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Logo from '../assets/logo.png';
-import Lock from '../assets/Rectangle 23.png';
-import Ordi from '../assets/Rectangle 23 (1).png';
-import Mailimg from '../assets/Rectangle 23 (2).png';
-import Users from '../assets/Rectangle 23 (3).png';
+import Lock from '../assets/logo.png';
+import Ordi from '../assets/logo.png';
+import Mailimg from '../assets/logo.png';
+import Users from '../assets/logo.png';
 import {
   Shield,
   BarChart3,

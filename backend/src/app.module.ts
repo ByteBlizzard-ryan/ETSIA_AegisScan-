@@ -28,6 +28,7 @@ import { UserSessionsModule } from 'BD/user_sessions/user_sessions.module';
 import { AnalyticsEventsModule } from 'BD/analytics_events/analytics_events.module';
 import { AuthModule } from 'BD/Utilisateur/authentification/Auth.module';
 import { AnalysesLien } from 'BD/analyses_lien/analyses_lien.entity';
+
 @Module({
   imports: [
     // Configuration pour lire le fichier .env

@@ -8,6 +8,8 @@ import {
 } from 'typeorm';
 import { Utilisateur } from 'BD/Utilisateur/utilisateur.entity';
 import { Question } from 'BD/questions/questions.entity';
+import { ReponsePossible } from '../reponses_possibles/reponses_possibles.entity';
+
 
 @Entity('reponses_utilisateur')
 export class ReponseUtilisateur {
@@ -22,12 +24,14 @@ export class ReponseUtilisateur {
   @JoinColumn({ name: 'id_question' })
   question: Question;
 
-  @Column({ type: 'varchar', length: 500 })
-  reponse_choisie: string;
+
+  @ManyToOne(() => ReponsePossible, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'id_reponse_choisie' })
+  reponse_choisie?: ReponsePossible | null; // Le "?" et le "| null" disent à TS que c'est optionnel
 
   @Column({ type: 'boolean' })
   est_correcte: boolean;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   date_reponse: Date;
 }

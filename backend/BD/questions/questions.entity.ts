@@ -1,29 +1,23 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+// BD/questions/questions.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Quiz } from '../quizzes/quizzes.entity';
+import { ReponsePossible } from '../reponses_possibles/reponses_possibles.entity'; // Import à ajouter
 
 @Entity('questions')
 export class Question {
   @PrimaryGeneratedColumn('uuid')
   id_question: string;
 
-  @ManyToOne(() => Quiz, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Quiz, (quiz) => quiz.questions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'id_quiz' })
   quiz: Quiz;
 
+  // AJOUTER CETTE RELATION :
+  @OneToMany(() => ReponsePossible, (reponse) => reponse.question)
+  reponses_possibles: ReponsePossible[];
+
   @Column({ type: 'text' })
   texte: string;
-
-  @Column({ type: 'varchar', length: 20 })
-  type_question: string;
-
-  @Column({ type: 'varchar', length: 500 })
-  bonne_reponse: string;
 
   @Column({ type: 'int' })
   points: number;
@@ -33,4 +27,7 @@ export class Question {
 
   @Column({ type: 'text', nullable: true })
   explication: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  explication_reponse: string | null; 
 }

@@ -45,6 +45,9 @@ export default function Login() {
       // 2. On stocke les infos utilisateur (pour afficher le nom sur le dashboard)
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      // 2. On stocke l'ID utilisateur SEUL (C'est ce que ton Quiz.tsx va chercher)
+      localStorage.setItem("user_id", data.user.id);
+
       // 3. Redirection vers le dashboard
       navigate("/dashboard");
 

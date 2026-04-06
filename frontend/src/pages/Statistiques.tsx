@@ -1,3 +1,5 @@
+"use client"
+
 import MainLayout from "../components/MainLayout";
 import StatCard from "../components/StatCard";
 import {
@@ -32,14 +34,13 @@ interface StatsState {
 
 export default function Statistiques() {
 
-    const COLORS_PERMANENT: Record<string, string> = {
-    "sûr": "#10b981",       // Vert (Permanent)
-    "suspect": "#f59e0b",    // Orange (Permanent)
-    "dangereux": "#ef4444",  // Rouge (Permanent)
-    "default": "#94a3b8"     // Gris (Si label inconnu)
+    // --- 1. MODIFICATION ICI : CONFIGURATION DES COULEURS STRICTES ---
+    const COLORS_STRICT: Record<string, string> = {
+        "sûr": "#10b981",       // Vert (Pour le succès)
+        "dangereux": "#ef4444",  // Rouge (Pour tout le reste/danger)
     };
 
-    // 2. Initialize state with full structure
+    // 2. Initialize state
     const [stats, setStats] = useState<StatsState>({
         totalLinks: 0,
         threatsDetected: 0,
@@ -49,7 +50,8 @@ export default function Statistiques() {
         pieChart: []   
     });
 
-    const [days, setDays] = useState(7);
+    // Filtre de jours (Mis à 365 par défaut pour "Depuis le début")
+    const [days, setDays] = useState(10000);
 
     useEffect(() => {
         const loadStats = async () => {
@@ -67,7 +69,6 @@ export default function Statistiques() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    // Fallback to empty arrays if backend keys are missing
                     setStats({
                         ...data,
                         lineChart: data.lineChart || [],
@@ -80,7 +81,7 @@ export default function Statistiques() {
         };
 
         loadStats();
-    }, [days]); 
+    }, [days]);
 
     // --- Dynamic Logic for Charts ---
 
@@ -89,13 +90,14 @@ export default function Statistiques() {
         const maxVal = Math.max(...data.map(d => d.count), 1);
         const points = data.map((d, i) => {
             const x = (i / (data.length - 1)) * 400;
-            const y = 200 - (d.count / maxVal) * 160 - 20; // Scale with padding
+            const y = 200 - (d.count / maxVal) * 160 - 20; 
             return `${x},${y}`;
         });
         return `M ${points.join(" L ")}`;
     };
 
-        const renderDonutSegments = () => {
+    // --- 2. MODIFICATION ICI : LOGIQUE DE RENDU DU DONUT STRICT ---
+    const renderDonutSegments = () => {
         const pieData = stats.pieChart || [];
         const total = pieData.reduce((acc, curr) => acc + curr.value, 0);
         if (total === 0) return <circle cx="50" cy="50" r="35" stroke="#e8ecef" strokeWidth="20" fill="none" />;
@@ -108,9 +110,11 @@ export default function Statistiques() {
             const dashOffset = (offset * 219.9) / 100;
             offset += percentage;
 
-            // FORCE LA COULEUR : On cherche le label dans notre dictionnaire
-            // .toLowerCase() permet d'être sûr que "Sûr" ou "sûr" fonctionne
-            const segmentColor = COLORS_PERMANENT[item.label.toLowerCase()] || COLORS_PERMANENT.default;
+            // --- LOGIQUE STRICTE : Si ce n'est pas "sûr", c'est forcément Rouge ---
+            const currentLabel = item.label.toLowerCase();
+            const segmentColor = (currentLabel === "sûr") 
+                ? COLORS_STRICT["sûr"] 
+                : COLORS_STRICT["dangereux"]; // Force le rouge pour "suspect" ou tout autre label
 
             return (
                 <circle
@@ -118,7 +122,7 @@ export default function Statistiques() {
                     cx="50"
                     cy="50"
                     r="35"
-                    stroke={segmentColor} // Utilise la couleur fixe
+                    stroke={segmentColor} // Utilise la couleur stricte
                     strokeWidth="20"
                     fill="none"
                     strokeDasharray={dashArray}
@@ -131,23 +135,26 @@ export default function Statistiques() {
 
     return (
         <MainLayout title="Statistiques">
-            {/* Header Actions */}
+            {/* Header Actions - Filtre par défaut "Depuis la première analyse" */}
             <div className="flex justify-end mb-6">
-                <select className="date-selector bg-white border border-gray-200 rounded px-4 py-2 flex items-center gap-2 cursor-pointer"
-                value={days}
-                onChange={(e) => setDays(Number(e.target.value))}>
+                <select 
+                    className="date-selector bg-white border border-gray-200 rounded px-4 py-2 flex items-center gap-2 cursor-pointer"
+                    value={days}
+                    onChange={(e) => setDays(Number(e.target.value))}
+                >
+                    <option value={10000}>Depuis la première analyse</option>
                     <option value={7}>Derniers 7 jours</option>
                     <option value={30}>Derniers 30 jours</option>
                     <option value={90}>Derniers 90 jours</option>
                 </select>
             </div>
 
-            {/* Stats Cards */}
+            {/* Stats Cards - Pas de changement de couleur */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
                 <StatCard
                     title="Liens analysés"
                     value={stats.totalLinks ?? 0}
-                    subtitle="Depuis le début"
+                    subtitle={days === 365 ? "Historique complet" : `Sur ${days} jours`}
                     icon={Link2}
                     iconColor="#4a8a9a"
                 />
@@ -156,7 +163,7 @@ export default function Statistiques() {
                     value={stats.threatsDetected ?? 0}
                     subtitle="Activité totale"
                     icon={ShieldCheck}
-                    iconColor="#1a9a7a"
+                    iconColor="#ef4444" // Mis en Rouge (strict)
                 />
                 <StatCard
                     title="Score de risque moyen"
@@ -170,13 +177,12 @@ export default function Statistiques() {
                     value={stats.protectionRate ?? "100%"}
                     subtitle="Efficacité du système"
                     icon={CheckCircle}
-                    iconColor="#1a9a7a"
+                    iconColor="#10b981" // Mis en Vert (strict)
                 />
             </div>
 
             {/* Charts Section */}
             <div className="charts-section">
-                {/* Line Chart */}
                 <div className="chart-card">
                     <h3 className="chart-title">Performance des Liens</h3>
                     <p className="chart-description">
@@ -203,7 +209,7 @@ export default function Statistiques() {
                             <div className="chart-x-axis">
                                 {stats.lineChart.length > 0 ? (
                                     stats.lineChart.map((d, i) => (
-                                        <span key={i}>{d.date.split('-').slice(2)}</span>
+                                        <span key={i}>{d.date.split('-').pop()}</span>
                                     ))
                                 ) : (
                                     <span>-</span>
@@ -213,11 +219,10 @@ export default function Statistiques() {
                     </div>
                 </div>
 
-                {/* Donut Chart */}
                 <div className="chart-card">
                     <h3 className="chart-title">Distribution des Menaces</h3>
                     <p className="chart-description">
-                        Répartition par niveau de gravité.
+                        Répartition binaire (Vert: Sûr, Rouge: Danger).
                     </p>
                     <div className="chart-container">
                         <div className="donut-chart-container">
@@ -226,22 +231,31 @@ export default function Statistiques() {
                                     <circle cx="50" cy="50" r="35" stroke="#e8ecef" strokeWidth="20" fill="none" />
                                     {renderDonutSegments()}
                                 </svg>
+                                
+                                {/* --- MODIFICATION ICI : LÉGENDE STRICTE --- */}
                                 <div className="donut-labels-list mt-4">
-                                    {(stats.pieChart || []).map((item, i) => (
-                                        <div key={i} className="flex justify-between text-xs mb-1">
-                                            <div className="flex items-center gap-1">
-                                                <div 
-                                                    className="w-2 h-2 rounded-full" 
-                                                    style={{ 
-                                                        // On utilise la même logique de couleur ici
-                                                        backgroundColor: COLORS_PERMANENT[item.label.toLowerCase()] || COLORS_PERMANENT.default 
-                                                    }}
-                                                ></div>
-                                                <span className="capitalize">{item.label}</span>
+                                    {(stats.pieChart || []).map((item, i) => {
+                                        const currentLabel = item.label.toLowerCase();
+                                        // On ignore l'affichage dans la légende si la valeur est 0 (propre)
+                                        if (item.value === 0) return null; 
+
+                                        return (
+                                            <div key={i} className="flex justify-between text-xs mb-1">
+                                                <div className="flex items-center gap-1">
+                                                    <div 
+                                                        className="w-2 h-2 rounded-full" 
+                                                        style={{ 
+                                                            backgroundColor: (currentLabel === "sûr") 
+                                                                ? COLORS_STRICT["sûr"] 
+                                                                : COLORS_STRICT["dangereux"]
+                                                        }}
+                                                    ></div>
+                                                    <span className="capitalize">{item.label}</span>
+                                                </div>
+                                                <span className="font-bold">{item.value}</span>
                                             </div>
-                                            <span className="font-bold">{item.value}</span>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

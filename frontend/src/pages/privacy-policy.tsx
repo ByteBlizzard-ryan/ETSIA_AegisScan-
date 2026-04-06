@@ -1,152 +1,244 @@
 "use client"
 
-import "../styles/privacy-policy.css"
+import React from "react"
 import { useNavigate } from "react-router-dom"
+import { 
+  ShieldCheck, 
+  Database, 
+  Eye, 
+  UserCheck, 
+  Lock, 
+  Mail, 
+  ArrowLeft,
+  ChevronRight,
+  ShieldAlert
+} from "lucide-react"
 
 export default function PrivacyPolicy() {
     const navigate = useNavigate();
 
-    const handleBack = () => {
-        navigate(-1); // Navigue vers la page précédente
+    // --- COULEURS RÉCUPÉRÉES DE TON DASHBOARD ---
+    const colors = {
+        primary: "#1A365D",
+        accent: "#1a9a7a",
+        statIcon: "#4a8a9a",
+        bg: "#f8fafc",
+        textMain: "#2d3748",
+        textSecondary: "#4a5568",
+        border: "#e2e8f0"
+    };
+
+    const styles = {
+        container: {
+            backgroundColor: colors.bg,
+            minHeight: "100vh",
+            padding: "40px 20px",
+            fontFamily: "'Inter', system-ui, sans-serif",
+            color: colors.textMain
+        },
+        card: {
+            maxWidth: "850px",
+            margin: "0 auto",
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            overflow: "hidden",
+            border: `1px solid ${colors.border}`
+        },
+        header: {
+            textAlign: "center" as const,
+            padding: "60px 40px",
+            borderBottom: `1px solid ${colors.border}`,
+            background: `linear-gradient(135deg, #ffffff 0%, #edf2f7 100%)`
+        },
+        section: {
+            padding: "40px",
+            borderBottom: `1px solid ${colors.border}`
+        },
+        sectionTitle: {
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            fontSize: "1.25rem",
+            fontWeight: "700",
+            color: colors.primary,
+            marginBottom: "20px"
+        },
+        highlightBox: {
+            backgroundColor: "#f0fff4", // Vert très clair pour la confiance
+            padding: "24px",
+            borderRadius: "12px",
+            borderLeft: `4px solid ${colors.accent}`,
+            marginTop: "20px"
+        },
+        backButton: {
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "none",
+            border: "none",
+            color: colors.textSecondary,
+            cursor: "pointer",
+            fontWeight: "600",
+            marginBottom: "24px",
+            transition: "all 0.2s"
+        },
+        badge: {
+            backgroundColor: colors.accent,
+            color: "white",
+            padding: "4px 12px",
+            borderRadius: "99px",
+            fontSize: "0.75rem",
+            fontWeight: "bold",
+            textTransform: "uppercase" as const,
+            letterSpacing: "0.05em"
+        }
     }
 
     return (
-        <div className="privacy-container">
-            <div className="privacy-content">
-                <h1 className="privacy-title">Politique de confidentialité – AegisScan</h1>
+        <div style={styles.container}>
+            <div style={{ maxWidth: "850px", margin: "0 auto" }}>
+                
+                <button 
+                    onClick={() => navigate(-1)} 
+                    style={styles.backButton}
+                    onMouseOver={(e) => (e.currentTarget.style.color = colors.primary)}
+                    onMouseOut={(e) => (e.currentTarget.style.color = colors.textSecondary)}
+                >
+                    <ArrowLeft size={18} /> Retour au Dashboard
+                </button>
 
-                <p className="privacy-intro">
-                    AegisScan accorde une importance primordiale à la protection de votre vie privée et de vos
-                    données personnelles. Cette politique de confidentialité explique quelles informations sont
-                    collectées, comment elles sont utilisées et quels sont vos droits.
-                </p>
+                <div style={styles.card}>
+                    {/* Header stylisé comme ton Dashboard */}
+                    <header style={styles.header}>
+                        <div style={{ 
+                            backgroundColor: "white", 
+                            width: "80px", 
+                            height: "80px", 
+                            borderRadius: "20px", 
+                            display: "flex", 
+                            alignItems: "center", 
+                            justifyContent: "center", 
+                            margin: "0 auto 24px",
+                            color: colors.accent,
+                            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+                        }}>
+                            <ShieldCheck size={40} />
+                        </div>
+                        <span style={styles.badge}>Sécurité Certifiée</span>
+                        <h1 style={{ fontSize: "2.25rem", fontWeight: "800", color: colors.primary, marginTop: "16px", marginBottom: "8px" }}>
+                            Politique de confidentialité
+                        </h1>
+                        <p style={{ color: colors.textSecondary, fontSize: "1rem" }}>AegisScan protège vos données personnelles</p>
+                    </header>
 
-                {/* Section 1 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">1. Données collectées</h2>
-                    <p className="section-text">AegisScan peut collecter les types de données suivants :</p>
-                    <ul className="privacy-list">
-                        <li>Données d'utilisation : interactions avec l'application, progression dans les cours, résultats aux quiz.</li>
-                        <li>Données techniques : type d'appareil, système d'exploitation, version de l'application.</li>
-                        <li>Données fournies volontairement : adresse e-mail (si création de compte ou contact).</li>
-                    </ul>
-                    <p className="note-text">
-                        AegisScan ne collecte pas de données sensibles sans votre consentement explicite.
-                    </p>
-                </section>
+                    <main>
+                        {/* Section 1 - Données */}
+                        <section style={styles.section}>
+                            <div style={styles.sectionTitle}>
+                                <Database size={24} style={{ color: colors.statIcon }} />
+                                <h2>1. Données collectées</h2>
+                            </div>
+                            <p style={{ color: colors.textSecondary, lineHeight: "1.7", marginBottom: "20px" }}>
+                                Pour assurer le fonctionnement d'AegisScan et votre protection, nous collectons :
+                            </p>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                                {[
+                                    { t: "Analyses", d: "Historique des URL vérifiées" },
+                                    { t: "Progression", d: "Scores de quiz et badges" },
+                                    { t: "Technique", d: "Modèle d'appareil et version" },
+                                    { t: "Compte", d: "Email pour la synchronisation" }
+                                ].map((item, i) => (
+                                    <div key={i} style={{ padding: "15px", borderRadius: "10px", border: `1px solid ${colors.border}`, display: "flex", gap: "10px" }}>
+                                        <ChevronRight size={16} style={{ color: colors.accent, flexShrink: 0 }} />
+                                        <div>
+                                            <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{item.t}</div>
+                                            <div style={{ fontSize: "0.8rem", color: colors.textSecondary }}>{item.d}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
 
-                {/* Section 2 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">2. Utilisation des données</h2>
-                    <p className="section-text">Vos données sont utilisées uniquement pour :</p>
-                    <ul className="privacy-list">
-                        <li>Assurer le bon fonctionnement de l'application</li>
-                        <li>Améliorer l'expérience utilisateur</li>
-                        <li>Afficher votre progression et vos badges</li>
-                        <li>Garantir la sécurité de l'application</li>
-                        <li>Communiquer avec vous si nécessaire</li>
-                    </ul>
-                </section>
+                        {/* Section 2 - Utilisation */}
+                        <section style={styles.section}>
+                            <div style={styles.sectionTitle}>
+                                <Eye size={24} style={{ color: colors.accent }} />
+                                <h2>2. Utilisation des données</h2>
+                            </div>
+                            <p style={{ color: colors.textSecondary, lineHeight: "1.7" }}>
+                                Vos données ne sont jamais vendues. Elles servent exclusivement à :
+                            </p>
+                            <ul style={{ listStyle: "none", padding: 0, marginTop: "15px" }}>
+                                {["Bloquer les liens malveillants", "Générer vos statistiques de sécurité", "Améliorer nos algorithmes de détection"].map((text, i) => (
+                                    <li key={i} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", color: colors.textSecondary }}>
+                                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: colors.accent }}></div>
+                                        {text}
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
 
-                {/* Section 3 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">3. Partage des données</h2>
-                    <p className="section-text">
-                        AegisScan ne vend, ne loue et ne partage aucune donnée personnelle avec des tiers, sauf
-                        obligation légale ou nécessité technique liée au fonctionnement du service.
-                    </p>
-                </section>
+                        {/* Section Droits - Mise en avant Vert Aegis */}
+                        <section style={styles.section}>
+                            <div style={styles.sectionTitle}>
+                                <UserCheck size={24} style={{ color: colors.primary }} />
+                                <h2>3. Vos Droits & RGPD</h2>
+                            </div>
+                            <div style={styles.highlightBox}>
+                                <p style={{ margin: 0, color: colors.primary, fontWeight: "600" }}>
+                                    Conformément au RGPD, vous gardez le contrôle total : droit d'accès, de rectification et suppression de compte instantanée.
+                                </p>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "15px" }}>
+                                    <div style={{ backgroundColor: colors.primary, color: "white", padding: "8px", borderRadius: "8px" }}>
+                                        <Mail size={18} />
+                                    </div>
+                                    <a href="mailto:contact@aegisscan.com" style={{ color: colors.primary, fontWeight: "800", textDecoration: "none", borderBottom: `2px solid ${colors.accent}` }}>
+                                        contact@aegisscan.com
+                                    </a>
+                                </div>
+                            </div>
+                        </section>
 
-                {/* Section 4 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">4. Sécurité des données</h2>
-                    <p className="section-text">
-                        Nous mettons en œuvre des mesures techniques et organisationnelles afin de protéger vos
-                        données contre tout accès non autorisé, perte ou altération.
-                    </p>
-                </section>
+                        {/* Section Sécurité */}
+                        <section style={{ ...styles.section, borderBottom: "none" }}>
+                            <div style={styles.sectionTitle}>
+                                <Lock size={24} style={{ color: colors.accent }} />
+                                <h2>4. Sécurité du stockage</h2>
+                            </div>
+                            <p style={{ color: colors.textSecondary, lineHeight: "1.7", margin: 0 }}>
+                                Toutes les analyses effectuées sur le dashboard sont chiffrées. Nous utilisons des serveurs sécurisés pour garantir qu'aucun tiers ne puisse accéder à votre historique de navigation.
+                            </p>
+                        </section>
+                    </main>
 
-                {/* Section 5 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">5. Conservation des données</h2>
-                    <p className="section-text">
-                        Les données sont conservées uniquement pendant la durée nécessaire à l'utilisation de
-                        l'application ou conformément aux obligations légales.
-                    </p>
-                </section>
-
-                {/* Section 6 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">6. Vos droits</h2>
-                    <p className="section-text">
-                        Conformément à la réglementation en vigueur (RGPD), vous disposez des droits suivants :
-                    </p>
-                    <ul className="privacy-list">
-                        <li>Droit d'accès à vos données</li>
-                        <li>Droit de rectification</li>
-                        <li>Droit de suppression</li>
-                        <li>Droit d'opposition et de limitation</li>
-                    </ul>
-                    <div className="email-container">
-                        <span className="text">Vous pouvez exercer ces droits en nous contactant à l'adresse suivante :</span>
-                        <svg className="email-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="2" y="4" width="20" height="16" rx="2" />
-                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                        </svg>
-                        <a href="mailto:contact@aegisscan.com" className="email-link">contact@aegisscan.com</a>
+                    {/* Footer de la carte */}
+                    <div style={{ padding: "40px", textAlign: "center", backgroundColor: "#f8fafc", borderTop: `1px solid ${colors.border}` }}>
+                        <button 
+                            onClick={() => navigate(-1)}
+                            style={{ 
+                                backgroundColor: colors.primary, 
+                                color: "white", 
+                                padding: "14px 40px", 
+                                borderRadius: "12px", 
+                                border: "none", 
+                                fontWeight: "700", 
+                                cursor: "pointer",
+                                transition: "transform 0.2s",
+                                boxShadow: "0 4px 14px rgba(26, 54, 93, 0.3)"
+                            }}
+                            onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                        >
+                            Fermer
+                        </button>
                     </div>
-                </section>
-
-                {/* Section 7 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">7. Cookies et technologies similaires</h2>
-                    <p className="section-text">
-                        AegisScan peut utiliser des technologies similaires aux cookies uniquement à des fins de
-                        fonctionnement et d'amélioration de l'application.
-                    </p>
-                </section>
-
-                {/* Section 8 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">8. Modifications de la politique</h2>
-                    <p className="section-text">
-                        Cette politique de confidentialité peut être mise à jour à tout moment. Toute modification sera
-                        publiée directement dans l'application.
-                    </p>
-                </section>
-
-                {/* Section 9 */}
-                <section className="privacy-section">
-                    <h2 className="section-title">9. Contact</h2>
-                    <p className="section-text">
-                        Pour toute question concernant cette politique de confidentialité ou vos données personnelles,
-                        vous pouvez nous contacter à :
-                    </p>
-                    <div className="email-container">
-                        <svg className="email-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="2" y="4" width="20" height="16" rx="2" />
-                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                        </svg>
-                        <a href="mailto:contact@aegisscan.com" className="email-link">contact@aegisscan.com</a>
-                    </div>
-                </section>
-
-                {/* Back button */}
-                <div className="back-button-container">
-                    <button onClick={handleBack} className="back-button" type="button">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="m15 18-6-6 6-6" />
-                        </svg>
-                        Retour
-                    </button>
                 </div>
-            </div>
 
-            {/* Footer */}
-            <footer className="privacy-footer">
-                <p>@ 2026 AegisScan. Tous droits réservés</p>
-                <a href="#">Politique de confidentialité</a>
-            </footer>
+                <footer style={{ textAlign: "center", padding: "40px", color: colors.textSecondary, fontSize: "0.85rem" }}>
+                    <p>© 2026 AegisScan • Protection des données de bout en bout</p>
+                </footer>
+            </div>
         </div>
     )
 }

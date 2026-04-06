@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column, 
+  OneToOne, 
+  JoinColumn 
+} from 'typeorm';
+import { ModuleEducatif } from '../modules_educatifs/modules_educatifs.entity';
 
 @Entity('badges')
 export class Badge {
@@ -14,12 +21,12 @@ export class Badge {
   @Column({ type: 'varchar', length: 255, nullable: true })
   icone: string | null;
 
-  @Column({ type: 'text' })
-  condition: string;
-
-  @Column({ type: 'int', default: 0 })
-  points_requis: number;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  type_badge: string | null;
+  // --- RELATION ---
+  // On pointe vers 'badge' qui est le nom de la propriété dans ModuleEducatif
+  @OneToOne(() => ModuleEducatif, (moduleEducatif) => moduleEducatif.badge, { 
+    nullable: true, 
+    onDelete: 'SET NULL' 
+  })
+  @JoinColumn({ name: 'id_module' }) // La colonne SQL créée sera id_module
+  module: ModuleEducatif;
 }

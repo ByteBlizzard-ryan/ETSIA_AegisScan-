@@ -11,6 +11,9 @@ import { AnalysesLien, NiveauRisque, StatutAnalyse } from 'BD/analyses_lien/anal
 
 @Injectable()
 export class AnalyseLienService {
+  getStatistics(id_utilisateur: any) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(Lien)
     private readonly lienRepo: Repository<Lien>,
@@ -124,7 +127,6 @@ export class AnalyseLienService {
       where: { utilisateur: { id_utilisateur: userId } },
       relations: ['lien'], // Pour récupérer l'objet 'lien' et donc son URL
       order: { date_analyse: 'DESC' }, // Les plus récentes en premier
-      take: 10 // Limiter aux 10 dernières par exemple
     });
   }
 }

@@ -17,43 +17,55 @@ export default function Register() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
 //Fonction handleSubmit mise à jour pour gérer les erreurs du DTO et recevoir les données depuis la base de données
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
-  setIsLoading(true);
-
-  try {
-    const response = await fetch('http://localhost:3000/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        acceptTerms: formData.acceptTerms
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      // ICI : On récupère le message précis du DTO
-      if (data.message) {
-        // Si c'est un tableau (plusieurs erreurs), on prend la première
-        const errorMsg = Array.isArray(data.message) ? data.message[0] : data.message;
-        throw new Error(errorMsg);
-      }
-      throw new Error("Une erreur est survenue");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    
+    // --- AJOUT DE LA VÉRIFICATION ICI ---
+    if (formData.password !== formData.confirmPassword) {
+      setError("Les mots de passe ne correspondent pas !");
+      return; // On arrête la fonction ici
     }
+    // -------------------------------------
 
-    navigate("/dashboard");
-  } catch (err: any) {
-    setError(err.message); 
-  } finally {
-    setIsLoading(false);
-  }
-};
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:3000/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          acceptTerms: formData.acceptTerms
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.message) {
+          const errorMsg = Array.isArray(data.message) ? data.message[0] : data.message;
+          throw new Error(errorMsg);
+        }
+        throw new Error("Une erreur est survenue");
+      }
+
+      // --- OPTIONNEL : Stocker le token si le backend le renvoie à l'inscription ---
+      if(data.access_token) {
+          localStorage.setItem('token', data.access_token);
+      }
+
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(err.message); 
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AuthLayout>
@@ -165,7 +177,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               style={{ color: "var(--muted-foreground)" }}
             >
               J'accepte la{" "}
-              <a href="#" style={{ color: "#6BA5E4", textDecoration: "underline" }}>
+              <a href="/privacy-policy" style={{ color: "#6BA5E4", textDecoration: "underline" }}>
                 politique de confidentialité
               </a>
             </label>

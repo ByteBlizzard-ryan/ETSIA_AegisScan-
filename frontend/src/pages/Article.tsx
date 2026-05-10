@@ -137,10 +137,10 @@ const PhishingArticle: React.FC = () => {
 
         <footer className="mt-12 mb-10 flex justify-between items-center px-6 text-slate-400 text-sm">
           <p>© 2026 AegisScan Education</p>
-          <div className="flex gap-6">
+          {/* <div className="flex gap-6">
             <button className="hover:text-blue-600 transition-colors">Signaler une erreur</button>
             <button className="hover:text-blue-600 transition-colors">Partager</button>
-          </div>
+          </div> */}
         </footer>
       </div>
     </div>

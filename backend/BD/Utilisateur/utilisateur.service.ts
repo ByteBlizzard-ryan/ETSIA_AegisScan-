@@ -90,7 +90,7 @@ async getStatistics(userId: string, days: number = 7) {
 
     const [totalLinks, threats, avgScoreResult, lineChartData, pieChartData] = await Promise.all([
         // 1. Total Links
-        this.lienRepo.count({ where: { utilisateur: { id_utilisateur: userId } } }),
+        this.analysesRepo.count({ where: { utilisateur: { id_utilisateur: userId } } }),
 
         // 2. Threat Data
         this.analysesRepo.find({
@@ -220,13 +220,13 @@ async verifierEtAttribuerBadge(userId: string, moduleId: string) {
               [userId, idBadge]
             );
             console.log(`✅ Badge "${badge[0].nom_badge}" attribué à l'utilisateur ${userId}`);
-            return { unlocked: true, badgeName: badge[0].nom_badge, icone: badge[0].icone };
+            return { unlocked: true, badgeName: badge[0].nom_badge, icone: badge[0].icone };// rEOURNE DES INFOS UTILIES POIUR QFFICHER LEIWRFW
           }
         }
       }
     }
   } catch (error) {
-    console.error("❌ Erreur SQL dans verifierEtAttribuerBadge :", error.message);
+    console.error("❌ Erreur SQL dans verifierEtAttribuerBadge :", error.message); 
   }
   return { unlocked: false };
 }

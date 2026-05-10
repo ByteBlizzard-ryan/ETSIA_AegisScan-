@@ -145,7 +145,7 @@ export default function Login() {
               className="text-sm"
               style={{ color: "#6BA5E4", textDecoration: "underline" }}
             >
-              Mot de passe oublié ?
+              {/* Mot de passe oublié ? */}
             </Link>
           </div>
 

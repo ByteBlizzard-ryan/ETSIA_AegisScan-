@@ -1,18 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "../components/MainLayout";
 import StatCard from "../components/StatCard";
 import "../styles/dashboard.css";
-import { useEffect } from "react";
 
 // Icons Components
 import {
     Link as LinkIcon,
     Bug,
-    CheckCircle,
-    ChevronDown
+    ShieldAlert,CheckCircle2
 } from "lucide-react";
 
-// 1. Définition de la structure des données
+// 1. Définition des structures de données
 interface AnalyseData {
     lien: {
         url: string;
@@ -20,6 +18,11 @@ interface AnalyseData {
     date_analyse: string;
     niveau_risque: string;
     statut: string;
+}
+
+interface UserStats {
+    totalLinks: number;
+    threatsDetected: number;
 }
 
 // Custom SVG Icons
@@ -38,125 +41,219 @@ const LinkInputIcon = () => (
     </svg>
 );
 
-//Fonction pour garder le tableau des analyses de facon propre
-const truncateURL = (url:string, maxLength = 30) => {
+const truncateURL = (url: string, maxLength = 30) => {
     if (url.length <= maxLength) return url;
     return url.substring(0, maxLength) + "...";
 };
 
 export default function Dashboard() {
-    // 1. ÉTATS (STATES) - Doivent être à l'intérieur du composant
+    // ÉTATS
     const [isLoading, setIsLoading] = useState(false);
     const [urlInput, setUrlInput] = useState("");
-    const [analyses, setAnalyses] = useState([
-        { url: "https://actualite-info.biz/urgence-secu", date: "2023-10-26 14:30", risk: "dangereux", status: "Bloqué" },
-        { url: "https://ma-banque-en-ligne.fr/login", date: "2023-10-26 10:15", risk: "suspect", status: "Bloqué" },
-        { url: "https://rapport-finance.com/Q3-2023", date: "2023-10-25 18:45", risk: "sûr", status: "Nettoyé" },
-    ]);
+    const [analyses, setAnalyses] = useState<any[]>([]);
+    const [user, setUser] = useState<{ username: string } | null>(null);
+    
+    // NOUVEAU : États pour les stats venant du backend
+    const [stats, setStats] = useState<UserStats>({
+        totalLinks: 0,
+        threatsDetected: 0
+    });
 
-    const [user, setUser] = useState<{username: string} | null>(null);
-
-        useEffect(() => {
+    // Chargement initial des données
+    useEffect(() => {
+        const token = localStorage.getItem('token');
         const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
-        }
+        if (savedUser) setUser(JSON.parse(savedUser));
 
-        const fetchHistory = async () => {
-            const token = localStorage.getItem('token');
+        const fetchData = async () => {
+            if (!token) return;
+
             try {
-                const response = await fetch('http://localhost:3000/analyse-lien/historique', {
+                // Appel 1 : Historique pour le tableau
+                const resHistory = await fetch('http://localhost:3000/analyse-lien/historique', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (response.ok) {
-                    const data: AnalyseData[] = await response.json();
-                    // On formate les données de la DB pour qu'elles correspondent à ton tableau
+                
+                // Appel 2 : Statistiques pour les compteurs
+                const resStats = await fetch('http://localhost:3000/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (resHistory.ok) {
+                    const data: AnalyseData[] = await resHistory.json();
                     const formattedData = data.map(item => ({
                         url: item.lien.url,
                         date: new Date(item.date_analyse).toLocaleString(),
-                        risk: item.niveau_risque.toLowerCase(), // 'SÛR' -> 'sûr'
-                        status: item.statut.charAt(0).toUpperCase() + item.statut.slice(1) // 'bloqué' -> 'Bloqué'
+                        risk: item.niveau_risque.toLowerCase(),
+                        status: item.statut.charAt(0).toUpperCase() + item.statut.slice(1)
                     }));
                     setAnalyses(formattedData);
                 }
+
+                if (resStats.ok) {
+                    const statsData = await resStats.json();
+                    setStats({
+                        totalLinks: statsData.totalLinks,
+                        threatsDetected: statsData.threatsDetected
+                    });
+                }
             } catch (error) {
-                console.error("Erreur historique:", error);
+                console.error("Erreur de récupération des données:", error);
             }
         };
 
-        fetchHistory();
+        fetchData();
     }, []);
 
-    const handleAnalyze = async () => {
-    if (!urlInput) return alert("Veuillez entrer une URL");
-
-    setIsLoading(true);
-    try {
-        // 1. Récupérer le token stocké lors de la connexion
-        const token = localStorage.getItem('token'); 
-
-        const response = await fetch('http://localhost:3000/analyse-lien/process', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                // 2. Ajouter le token ici
-                'Authorization': `Bearer ${token}` 
-            },
-            body: JSON.stringify({ 
-                url: urlInput,
-                canal_source: 'Web Dashboard' 
-            }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            const newEntry = {
-                url: data.lien?.url || urlInput,
-                date: new Date().toLocaleString(),
-                risk: data.niveau_risque, 
-                status: data.statut === 'bloqué' ? "Bloqué" : "Nettoyé"
-            };
-            
-            setAnalyses(prevAnalyses => [newEntry, ...prevAnalyses]);
-            setUrlInput(""); 
-        } else {
-            // Si le token est expiré ou invalide, le backend renverra un 401
-            if (response.status === 401) {
-                alert("Votre session a expiré. Veuillez vous reconnecter.");
-            } else {
-                alert(`Erreur: ${data.message}`);
+    // Fonction d'actualisation des stats après une action
+    const refreshStats = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch('http://localhost:3000/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setStats({
+                    totalLinks: data.totalLinks,
+                    threatsDetected: data.threatsDetected
+                });
             }
+        } catch (e) { console.error(e); }
+    };
+
+    const handleAnalyze = async () => {
+        if (!urlInput) return alert("Veuillez entrer une URL");
+
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:3000/analyse-lien/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    url: urlInput,
+                    canal_source: 'Web Dashboard'
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const newEntry = {
+                    url: data.lien?.url || urlInput,
+                    date: new Date().toLocaleString(),
+                    risk: data.niveau_risque.toLowerCase(),
+                    status: data.statut.charAt(0).toUpperCase() + data.statut.slice(1),
+                };
+
+                setAnalyses(prev => [newEntry, ...prev]);
+                setUrlInput("");
+                // On rafraîchit les compteurs SQL en haut
+                await refreshStats();
+            } else {
+                if (response.status === 401) alert("Session expirée.");
+                else alert(`Erreur: ${data.message}`);
+            }
+        } catch (error) {
+            alert("Impossible de contacter le serveur.");
+        } finally {
+            setIsLoading(false);
         }
-    } catch (error) {
-        console.error("Connection failed:", error);
-        alert("Impossible de contacter le serveur.");
-    } finally {
-        setIsLoading(false);
-    }
-};
+    };
+
+    const handleLinkClick = (e: React.MouseEvent, url: string, risk: string) => {
+        if (risk === "dangereux") {
+            e.preventDefault();
+            alert("🚨 Action bloquée : Ce lien a été identifié comme dangereux par AegisScan.");
+        }
+    };
 
     return (
         <MainLayout title={`Bonjour, ${user?.username || 'Utilisateur'} !`} subtitle="Voici un aperçu de votre sécurité.">
-            {/* Stats Cards */}
+            
+            {/* Stats Cards - Connectées au backend */}
             <div className="grid grid-cols-3 gap-5 mb-6">
-                <StatCard title="Liens analysés" value={analyses.length} subtitle="Total des URL vérifiées" icon={LinkIcon} iconColor="#4a8a9a" />
-                <StatCard title="Liens bloqués" value={analyses.filter(a => a.status === "Bloqué").length} subtitle="Accès malveillant empêchés" icon={ShieldBlockIcon as any} iconColor="#1a9a7a" />
-                <StatCard title="Menaces détectées" value={analyses.filter(a => a.risk === "dangereux").length} subtitle="Vulnérabilités identifiées" icon={Bug} iconColor="#1a9a7a" />
+                <StatCard 
+                    title="Liens analysés" 
+                    value={stats.totalLinks} 
+                    subtitle="Total des URL vérifiées" 
+                    icon={LinkIcon} 
+                    iconColor="#4a8a9a" 
+                />
+                <StatCard 
+                    title="Liens bloqués" 
+                    value={stats.threatsDetected} 
+                    subtitle="Accès malveillant empêchés" 
+                    icon={ShieldBlockIcon as any} 
+                    iconColor="#1a9a7a" 
+                />
+                <StatCard 
+                    title="Menaces détectées" 
+                    value={stats.threatsDetected} 
+                    subtitle="Vulnérabilités identifiées" 
+                    icon={Bug} 
+                    iconColor="#1a9a7a" 
+                />
             </div>
 
             <div className="content-grid">
-                {/* Subscription Card */}
-                <div className="subscription-card">
+                {/* <div className="subscription-card">
                     <div className="subscription-header">
                         <h3>Statut d'abonnement</h3>
                         <span className="badge">Freemium</span>
                     </div>
                     <p className="subscription-description">Plan actuel : Protection essentielle.</p>
                     <button className="upgrade-button">Passer au premium</button>
-                </div>
+                </div> */}
 
-                {/* Analysis Table */}
+                    <div className="subscription-card">
+    <div className="subscription-header">
+        <h3>Statut d'abonnement</h3>
+        <span className="badge">Freemium</span>
+    </div>
+    
+    <p style={{
+        fontSize: "0.95rem",
+        lineHeight: "1.5",
+        color: "#374151",
+        marginBottom: "15px"
+    }}>
+        Votre plan actuel offre une protection essentielle. 
+        Passer au premium pour des fonctionnalités avancées.
+    </p>
+
+    {/* Liste des fonctionnalités sans fichier CSS */}
+    <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px 0" }}>
+        {[
+            "Analyse de liens en temps réel",
+            "Alertes de sécurité de base",
+            "Assistance IA"
+        ].map((feature, index) => (
+            <li key={index} style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between", // Pousse l'icône à droite
+                fontSize: "0.85rem",
+                color: "#4b5563",
+                marginBottom: "10px",
+                paddingRight: "5px"
+            }}>
+                {feature}
+                <CheckCircle2 
+                    size={14} // Taille réduite pour plus de finesse
+                    style={{ color: "#10b981", flexShrink: 0 }} 
+                />
+            </li>
+        ))}
+    </ul>
+
+    <button className="upgrade-button">Passer au premium</button>
+</div>
+                {/* Analysis Table - Limitée à 7 lignes via .slice(0, 7) */}
                 <div className="analysis-card">
                     <div className="analysis-header">
                         <h3>Dernières analyses</h3>
@@ -171,13 +268,20 @@ export default function Dashboard() {
                             </tr>
                         </thead>
                         <tbody>
-                            {analyses.map((item, index) => (
+                            {/* On ne change pas l'état 'analyses', on limite juste la vue ici */}
+                            {analyses.slice(0, 7).map((item, index) => (
                                 <tr key={index}>
                                     <td>
-                                    <a href={item.url} target="_blank" rel="noreferrer" className="url-link">
-                                        {truncateURL(item.url)}
-                                    </a>
-                                </td>
+                                        <a
+                                            href={item.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={`url-link ${item.risk === "dangereux" ? "disabled-link" : ""}`}
+                                            onClick={(e) => handleLinkClick(e, item.url, item.risk)}
+                                        >
+                                            {truncateURL(item.url)}
+                                        </a>
+                                    </td>
                                     <td>{item.date}</td>
                                     <td>
                                         <span className={`risk-badge ${item.risk === "dangereux" ? "high" : item.risk === "suspect" ? "medium" : "low"}`}>
@@ -191,27 +295,34 @@ export default function Dashboard() {
                                     </td>
                                 </tr>
                             ))}
+                            {/* Optionnel : Afficher un message si aucune analyse n'est présente */}
+                            {analyses.length === 0 && !isLoading && (
+                                <tr>
+                                    <td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                                        Aucune analyse récente.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* Quick Analysis Input */}
             <div className="quick-analysis">
                 <h3>Analyse rapide</h3>
                 <div className="analysis-input-wrapper">
                     <div className="input-container">
-                        <input 
-                            type="text" 
-                            placeholder="Coller un lien à analyser" 
+                        <input
+                            type="text"
+                            placeholder="Coller un lien à analyser"
                             value={urlInput}
                             onChange={(e) => setUrlInput(e.target.value)}
                         />
                         <LinkInputIcon />
                     </div>
-                    <button 
-                        className="analyze-button" 
-                        onClick={handleAnalyze} 
+                    <button
+                        className="analyze-button"
+                        onClick={handleAnalyze}
                         disabled={isLoading}
                     >
                         {isLoading ? "Analyse en cours..." : "Analyser le lien"}

@@ -104,7 +104,7 @@ export default function QuizPage() {
             {/* Barre de progression */}
             <div className="w-full bg-gray-100 h-2 rounded-full mb-8">
               <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                className="bg-[#1a9a7a] h-2 rounded-full transition-all duration-500" 
                 style={{ width: `${((currentStep + 1) / quiz.questions.length) * 100}%` }}
               ></div>
             </div>
@@ -118,7 +118,7 @@ export default function QuizPage() {
                 const isSelected = selectedReponseId === resp.id_reponse;
                 
                 // Style dynamique si feedback activé
-                let buttonStyle = "border-gray-200 text-gray-700 hover:border-blue-300";
+                let buttonStyle = "border-gray-200 text-gray-700 hover:border-[#1a9a7a]";
                 if (isSelected && !showFeedback) buttonStyle = "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-100";
                 if (showFeedback) {
                    if (resp.est_correcte) buttonStyle = "border-green-500 bg-green-50 text-green-700";
@@ -158,7 +158,7 @@ export default function QuizPage() {
                 <button
                   disabled={!selectedReponseId}
                   onClick={() => setShowFeedback(true)}
-                  className="px-10 py-4 bg-[#1A365D] text-white rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-30"
+                  className="px-10 py-4 bg-[#1a9a7a] text-white rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-30"
                 >
                   Vérifier ma réponse
                 </button>
@@ -166,14 +166,14 @@ export default function QuizPage() {
                 currentStep < quiz.questions.length - 1 ? (
                   <button
                     onClick={handleNext}
-                    className="flex items-center gap-2 px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all"
+                    className="flex items-center gap-2 px-10 py-4 bg-[#1a9a7a] text-white rounded-2xl font-bold shadow-lg transition-all"
                   >
                     Question suivante <ArrowRight size={20} />
                   </button>
                 ) : (
                   <button
                     onClick={handleFinish}
-                    className="px-12 py-4 bg-green-600 text-white rounded-2xl font-bold shadow-lg hover:bg-green-700 transition-all"
+                    className="px-12 py-4 bg-[#1a9a7a] text-white rounded-2xl font-bold shadow-lg hover:bg-green-700 transition-all"
                   >
                     Terminer le quiz
                   </button>
@@ -191,7 +191,7 @@ export default function QuizPage() {
             <p className="text-gray-500 mb-10 italic">Vos statistiques ont été mises à jour dans votre tableau de bord.</p>
             <button 
               onClick={() => navigate('/progression')}
-              className="w-full py-5 bg-[#1A365D] text-white rounded-2xl font-bold shadow-xl hover:shadow-blue-200 transition-all"
+              className="w-full py-5 bg-[#1A365D] text-white rounded-2xl font-bold shadow-xl transition-all"
             >
               Voir mon score
             </button>

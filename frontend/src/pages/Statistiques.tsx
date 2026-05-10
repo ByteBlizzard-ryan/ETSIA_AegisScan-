@@ -51,7 +51,7 @@ export default function Statistiques() {
     });
 
     // Filtre de jours (Mis à 365 par défaut pour "Depuis le début")
-    const [days, setDays] = useState(10000);
+    const [days, setDays] = useState(1000);
 
     useEffect(() => {
         const loadStats = async () => {
@@ -69,6 +69,16 @@ export default function Statistiques() {
 
                 if (response.ok) {
                     const data = await response.json();
+                    // --- AJOUTE CES LOGS ICI ---
+                console.log("=== DEBUG DATA BASE DE DONNÉES ===");
+                console.log("Valeur totalLinks reçue du backend :", data.totalLinks);
+                console.log("Détail du camembert (pieChart) :", data.pieChart);
+                
+                // Calcul manuel pour vérifier la cohérence
+                const totalPie = data.pieChart.reduce((acc, curr) => acc + curr.value, 0);
+                console.log("Somme calculée du camembert :", totalPie);
+                // ---------------------------
+
                     setStats({
                         ...data,
                         lineChart: data.lineChart || [],
@@ -97,24 +107,66 @@ export default function Statistiques() {
     };
 
     // --- 2. MODIFICATION ICI : LOGIQUE DE RENDU DU DONUT STRICT ---
-    const renderDonutSegments = () => {
+    // const renderDonutSegments = () => {
+    //     const pieData = stats.pieChart || [];
+    //     const total = pieData.reduce((acc, curr) => acc + curr.value, 0);
+    //     if (total === 0) return <circle cx="50" cy="50" r="35" stroke="#e8ecef" strokeWidth="20" fill="none" />;
+
+    //     let offset = 0;
+
+    //     return pieData.map((item, i) => {
+    //         const percentage = (item.value / total) * 100;
+    //         const dashArray = `${(percentage * 219.9) / 100} 219.9`;
+    //         const dashOffset = (offset * 219.9) / 100;
+    //         offset += percentage;
+
+    //         // --- LOGIQUE STRICTE : Si ce n'est pas "sûr", c'est forcément Rouge ---
+    //         const currentLabel = item.label.toLowerCase();
+    //         const segmentColor = (currentLabel === "sûr") 
+    //             ? COLORS_STRICT["sûr"] 
+    //             : COLORS_STRICT["dangereux"]; // Force le rouge pour "suspect" ou tout autre label
+
+    //         return (
+    //             <circle
+    //                 key={`segment-${item.label}-${i}`}
+    //                 cx="50"
+    //                 cy="50"
+    //                 r="35"
+    //                 stroke={segmentColor} // Utilise la couleur stricte
+    //                 strokeWidth="20"
+    //                 fill="none"
+    //                 strokeDasharray={dashArray}
+    //                 strokeDashoffset={-dashOffset}
+    //                 style={{ transition: 'all 0.5s ease' }}
+    //             />
+    //         );
+    //     });
+    // };
+
+        const renderDonutSegments = () => {
         const pieData = stats.pieChart || [];
-        const total = pieData.reduce((acc, curr) => acc + curr.value, 0);
-        if (total === 0) return <circle cx="50" cy="50" r="35" stroke="#e8ecef" strokeWidth="20" fill="none" />;
+        
+        // --- ERREUR ICI DANS TON CODE ACTUEL ---
+        // Si tu utilises stats.totalLinks, le cercle sera majoritairement gris.
+        // Il faut calculer le total uniquement sur les segments que tu veux afficher.
+        const displayTotal = pieData.reduce((acc, curr) => acc + curr.value, 0);
+
+        if (displayTotal === 0) return null;
 
         let offset = 0;
 
         return pieData.map((item, i) => {
-            const percentage = (item.value / total) * 100;
+            // On calcule le pourcentage par rapport au total AFFICHÉ (Sûr + Dangereux)
+            const percentage = (item.value / displayTotal) * 100;
+            
             const dashArray = `${(percentage * 219.9) / 100} 219.9`;
             const dashOffset = (offset * 219.9) / 100;
             offset += percentage;
 
-            // --- LOGIQUE STRICTE : Si ce n'est pas "sûr", c'est forcément Rouge ---
             const currentLabel = item.label.toLowerCase();
             const segmentColor = (currentLabel === "sûr") 
                 ? COLORS_STRICT["sûr"] 
-                : COLORS_STRICT["dangereux"]; // Force le rouge pour "suspect" ou tout autre label
+                : COLORS_STRICT["dangereux"];
 
             return (
                 <circle
@@ -122,7 +174,7 @@ export default function Statistiques() {
                     cx="50"
                     cy="50"
                     r="35"
-                    stroke={segmentColor} // Utilise la couleur stricte
+                    stroke={segmentColor}
                     strokeWidth="20"
                     fill="none"
                     strokeDasharray={dashArray}
@@ -154,7 +206,7 @@ export default function Statistiques() {
                 <StatCard
                     title="Liens analysés"
                     value={stats.totalLinks ?? 0}
-                    subtitle={days === 365 ? "Historique complet" : `Sur ${days} jours`}
+                    subtitle={days === 365 ? "Historique complet" : `Depuis la première analyse`}
                     icon={Link2}
                     iconColor="#4a8a9a"
                 />

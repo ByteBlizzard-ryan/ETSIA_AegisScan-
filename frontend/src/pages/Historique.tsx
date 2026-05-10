@@ -206,7 +206,7 @@ export default function Historique() {
                                 onClick={() => handlePageChange(i + 1)}
                                 className={`w-10 h-10 rounded-md text-sm font-semibold transition-all ${
                                     currentPage === i + 1 
-                                    ? "bg-blue-600 text-white shadow-md" 
+                                    ? "bg-[#1a9a7a] text-white shadow-md" 
                                     : "hover:bg-gray-100 text-gray-600"
                                 }`}
                             >

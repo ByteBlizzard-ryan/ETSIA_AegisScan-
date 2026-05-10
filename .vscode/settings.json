@@ -11,6 +11,17 @@
             "database": "AegisScan",
             "username": "postgres",
             "password": "G'abyno23aot#snk4"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "database": "AegisScan2",
+            "username": "postgres",
+            "password": "G'abyno23aot#snk4",
+            "name": "test BD AegisScan"
         }
     ]
 }

@@ -23,6 +23,7 @@ const navItems = [
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const currentPath = location.pathname;
 
   const handleLogout = () => {
     // TODO: Implement logout logic with backend
@@ -34,6 +35,11 @@ export default function Sidebar() {
     // Special case: Historique should be active for both /historique and /signaler-un-faux
     if (itemPath === "/historique") {
       return location.pathname === "/historique" || location.pathname === "/signaler-un-faux";
+    }
+    // 2. Cas spécial : Conseils et les pages de Quiz
+    if (itemPath === "/conseils") {
+      // Si l'URL commence par /conseils ou contient /quiz/
+      return currentPath.startsWith("/conseils") || currentPath.includes("/quiz/");
     }
     return location.pathname === itemPath;
   };

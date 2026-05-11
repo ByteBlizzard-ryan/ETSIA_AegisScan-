@@ -12,8 +12,14 @@ interface AnalyseDB {
     niveau_risque: string;
     statut: string; // 'autorisé' | 'bloqué'
     analyse_verdict_final: string;
+    score_risque: number;
+    canal_source: string;
+    temps_analyse_ms: number;
+    motifs: string;
     lien: {
+        id_lien: string;
         url: string;
+        total_analyses: number;
     };
 }
 
@@ -61,7 +67,18 @@ export default function Historique() {
                 setIsLoading(false);
             }
         };
+
+        // Écouter les événements de mise à jour de l'historique
+        const handleHistoryUpdate = () => {
+            fetchHistory();
+        };
+
+        window.addEventListener('history-updated', handleHistoryUpdate);
         fetchHistory();
+
+        return () => {
+            window.removeEventListener('history-updated', handleHistoryUpdate);
+        };
     }, []);
 
     // 3. LOGIQUE DE FILTRAGE ET RECHERCHE (useMemo pour la performance)
@@ -127,8 +144,9 @@ export default function Historique() {
                     <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
                         <tr>
                             <th className="p-4 font-semibold uppercase tracking-wider">URL du lien</th>
+                            <th className="p-4 font-semibold uppercase tracking-wider">Score</th>
+                            <th className="p-4 font-semibold uppercase tracking-wider">Canal</th>
                             <th className="p-4 font-semibold uppercase tracking-wider">Date d'analyse</th>
-                            <th className="p-4 font-semibold uppercase tracking-wider">Verdict Final</th>
                             <th className="p-4 font-semibold uppercase tracking-wider">Niveau de Risque</th>
                             <th className="p-4 font-semibold uppercase tracking-wider">Statut</th>
                         </tr>
@@ -136,7 +154,7 @@ export default function Historique() {
                     <tbody className="divide-y divide-gray-100">
                         {isLoading ? (
                             <tr>
-                                <td colSpan={5} className="p-12 text-center">
+                                <td colSpan={7} className="p-12 text-center">
                                     <div className="flex flex-col items-center gap-2 text-gray-500">
                                         <Loader2 className="animate-spin" size={24} />
                                         Chargement de vos données...
@@ -153,13 +171,22 @@ export default function Historique() {
                                     <td rel="noreferrer" className="url-link p-4 max-w-[300px] truncate font-medium" title={item.lien.url}>
                                         {item.lien.url}
                                     </td>
+                                    <td className="p-4">
+                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                            item.score_risque > 50 ? 'bg-red-100 text-red-800' :
+                                            item.score_risque > 10 ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-green-100 text-green-800'
+                                        }`}>
+                                            {item.score_risque}%
+                                        </span>
+                                    </td>
+                                    <td className="p-4 text-gray-600">
+                                        {item.canal_source || 'Non spécifié'}
+                                    </td>
                                     <td className="p-4 text-gray-500">
                                         {new Date(item.date_analyse).toLocaleString('fr-FR', {
                                             day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
                                         })}
-                                    </td>
-                                    <td className="p-4 text-gray-500">
-                                        {item.analyse_verdict_final || "Aucun verdict"}
                                     </td>
                                     <td className="p-4">
                                         <span className="font" style={{ color: riskColors[item.niveau_risque] || "#374151" }}>
@@ -175,7 +202,7 @@ export default function Historique() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={5} className="p-12 text-center text-gray-400">
+                                <td colSpan={7} className="p-12 text-center text-gray-400">
                                     Aucune analyse trouvée pour votre recherche.
                                 </td>
                             </tr>

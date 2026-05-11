@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import MainLayout from "../components/MainLayout";
 import StatCard from "../components/StatCard";
 import "../styles/dashboard.css";
+import { extensionSync } from "../services/extensionSync";
 
 // Icons Components
 import {
@@ -68,6 +69,25 @@ export default function Dashboard() {
         const fetchData = async () => {
             if (!token) return;
 
+        // Vérifier le statut de l'extension
+        const checkExtensionStatus = () => {
+            const status = extensionSync.getStatus();
+            setExtensionStatus({
+                available: status.extensionAvailable,
+                synced: status.extensionAvailable
+            });
+        };
+
+        // Forcer une détection au montage du composant
+        extensionSync.forceDetection().then(() => {
+            checkExtensionStatus();
+        });
+        
+        // Vérifier périodiquement
+        const statusInterval = setInterval(checkExtensionStatus, 3000);
+
+        const fetchHistory = async () => {
+            const token = localStorage.getItem('token');
             try {
                 // Appel 1 : Historique pour le tableau
                 const resHistory = await fetch('http://localhost:3000/analyse-lien/historique', {
@@ -103,6 +123,15 @@ export default function Dashboard() {
         };
 
         fetchData();
+        fetchHistory();
+
+        const handleHistoryUpdated = () => fetchHistory();
+        window.addEventListener('history-updated', handleHistoryUpdated);
+
+        return () => {
+            clearInterval(statusInterval);
+            window.removeEventListener('history-updated', handleHistoryUpdated);
+        };
     }, []);
 
     // Fonction d'actualisation des stats après une action
@@ -174,8 +203,58 @@ export default function Dashboard() {
 
     return (
         <MainLayout title={`Bonjour, ${user?.username || 'Utilisateur'} !`} subtitle="Voici un aperçu de votre sécurité.">
-            
-            {/* Stats Cards - Connectées au backend */}
+        <MainLayout title={`Bonjour, ${user?.username || 'Utilisateur'} !`} subtitle="Voici un aperçu de votre sécurité.">
+            {/* Indicateur de statut de l'extension */}
+            <div className={`mb-4 p-3 rounded-lg border ${
+                extensionStatus.available 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-orange-50 border-orange-200'
+            }`}>
+                <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${
+                        extensionStatus.available ? 'bg-green-500' : 'bg-orange-500'
+                    }`}></div>
+                    <div className="flex-1">
+                        <p className={`text-sm font-medium ${
+                            extensionStatus.available ? 'text-green-800' : 'text-orange-800'
+                        }`}>
+                            {extensionStatus.available 
+                                ? '🛡️ Protection automatique active' 
+                                : '⚠️ Extension navigateur non détectée'
+                            }
+                        </p>
+                        <p className={`text-xs ${
+                            extensionStatus.available ? 'text-green-600' : 'text-orange-600'
+                        }`}>
+                            {extensionStatus.available 
+                                ? 'Tous vos clics sur des liens sont automatiquement analysés'
+                                : "Installez l'extension pour une protection automatique"
+                            }
+                        </p>
+                    </div>
+                    {!extensionStatus.available && (
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={async (event) => {
+                                    const button = event.target as HTMLButtonElement;
+                                    button.textContent = 'Détection...';
+                                    button.disabled = true;
+                                    try {
+                                        const detected = await extensionSync.forceDetection();
+                                        button.textContent = detected ? 'Détectée !' : 'Non trouvée';
+                                        setTimeout(() => { button.textContent = 'Détecter'; button.disabled = false; }, 2000);
+                                    } catch { button.textContent = 'Erreur'; setTimeout(() => { button.textContent = 'Détecter'; button.disabled = false; }, 2000); }
+                                }}
+                                className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            >
+                                Détecter
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Stats Cards */}
             <div className="grid grid-cols-3 gap-5 mb-6">
                 <StatCard 
                     title="Liens analysés" 

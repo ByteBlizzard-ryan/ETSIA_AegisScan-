@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req,Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Param } from '@nestjs/common';
 import { AnalyseLienService } from './analyseLien.service';
 import { AnalyseLienDto } from './analyselien.dto';
 import { JwtAuthGuard } from '../Utilisateur/jwt-auth.guard';
@@ -7,15 +7,14 @@ import { JwtAuthGuard } from '../Utilisateur/jwt-auth.guard';
 export class AnalyseLienController {
   constructor(private readonly analyseService: AnalyseLienService) {}
 
-  @UseGuards(JwtAuthGuard) // <--- C'est ce Guard qui récupère ton UUID
+  @UseGuards(JwtAuthGuard)
   @Post('process')
   async handleAnalysis(@Body() dto: AnalyseLienDto, @Req() req) {
-    // Une fois connecté, NestJS remplit 'req.user' automatiquement
     const user = req.user; 
     
     return await this.analyseService.analyzeLink(
       dto.url, 
-      user, // Ici, user contient ton vrai UUID (ex: user.id_utilisateur)
+      user,
       dto.canal_source || 'Web Dashboard'
     );
   }
@@ -26,5 +25,21 @@ export class AnalyseLienController {
   async getHistorique(@Req() req) {
     const userId = req.user.id_utilisateur;
     return await this.analyseService.getUserHistory(userId);
+  }
+
+  // Nouvelle route pour obtenir les détails complets d'un lien
+  @UseGuards(JwtAuthGuard)
+  @Get('lien/:linkId/details')
+  async getLinkDetails(@Param('linkId') linkId: string, @Req() req) {
+    const userId = req.user.id_utilisateur;
+    return await this.analyseService.getLinkDetails(linkId, userId);
+  }
+
+  // Nouvelle route pour obtenir les statistiques de l'utilisateur
+  @UseGuards(JwtAuthGuard)
+  @Get('stats')
+  async getUserStats(@Req() req) {
+    const userId = req.user.id_utilisateur;
+    return await this.analyseService.getUserStats(userId);
   }
 }

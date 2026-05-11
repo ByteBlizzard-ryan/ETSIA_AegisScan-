@@ -13,8 +13,14 @@ interface UrlDetailsModalProps {
         niveau_risque: string;
         statut: string;
         analyse_verdict_final: string;
+        score_risque: number;
+        canal_source: string;
+        temps_analyse_ms: number;
+        motifs: string;
         lien: {
+            id_lien: string;
             url: string;
+            total_analyses: number;
         };
     } | null;
 }
@@ -24,6 +30,19 @@ export default function UrlDetailsModal({ isOpen, onClose, urlData }: UrlDetails
 
     // Sécurité si la modal est fermée ou sans données
     if (!isOpen || !urlData) return null;
+
+    // Fonction pour expliquer le score
+    const getScoreExplanation = (score: number) => {
+        if (score > 50) {
+            return "Score élevé : Plus de 50% des moteurs de sécurité ont détecté des menaces. Ce lien est considéré comme dangereux.";
+        } else if (score > 10) {
+            return "Score modéré : Entre 10% et 50% des moteurs ont détecté des problèmes. Ce lien est suspect et nécessite de la prudence.";
+        } else if (score > 0) {
+            return "Score faible : Moins de 10% des moteurs ont détecté des problèmes. Le lien est généralement sûr mais quelques alertes mineures ont été relevées.";
+        } else {
+            return "Score parfait : Aucun moteur de sécurité n'a détecté de menace. Ce lien est considéré comme sûr.";
+        }
+    };
 
     // Mapping des risques (Adapté aux valeurs de ta DB : DANGEREUX, SUSPECT, SÛR)
     const getRiskDetails = (niveau: string) => {
@@ -94,6 +113,26 @@ export default function UrlDetailsModal({ isOpen, onClose, urlData }: UrlDetails
                         </div>
                     </div>
 
+                    {/* Score Section avec explication */}
+                    <div className="space-y-2">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Score de sécurité</h3>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className={`text-2xl font-bold ${
+                                    urlData.score_risque > 50 ? 'text-red-600' :
+                                    urlData.score_risque > 10 ? 'text-yellow-600' :
+                                    'text-green-600'
+                                }`}>
+                                    {urlData.score_risque}%
+                                </span>
+                                <span className="text-sm text-gray-600">de risque détecté</span>
+                            </div>
+                            <p className="text-sm text-blue-700">
+                                {getScoreExplanation(urlData.score_risque)}
+                            </p>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Risk Card */}
                         <div className="space-y-2">
@@ -130,7 +169,7 @@ export default function UrlDetailsModal({ isOpen, onClose, urlData }: UrlDetails
 
                     {/* Metadata & Verdict */}
                     <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Informations complémentaires</h3>
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Informations détaillées</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex items-center gap-3">
                                 <Calendar className="text-gray-400" size={18} />
@@ -142,30 +181,55 @@ export default function UrlDetailsModal({ isOpen, onClose, urlData }: UrlDetails
                             <div className="flex items-center gap-3">
                                 <Globe className="text-gray-400" size={18} />
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] text-gray-400 uppercase font-bold">Verdict Final</span>
-                                    <span className="text-sm font-medium italic">"{urlData.analyse_verdict_final || 'Aucun verdict'}"</span>
+                                    <span className="text-[10px] text-gray-400 uppercase font-bold">Canal source</span>
+                                    <span className="text-sm font-medium">{urlData.canal_source || 'Non spécifié'}</span>
                                 </div>
                             </div>
+
+                            <div className="flex items-center gap-3">
+                                <Globe className="text-gray-400" size={18} />
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-gray-400 uppercase font-bold">Temps d'analyse</span>
+                                    <span className="text-sm font-medium">{urlData.temps_analyse_ms}ms</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Verdict et motifs */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="mb-3">
+                                <span className="text-[10px] text-gray-400 uppercase font-bold">Verdict Final</span>
+                                <p className="text-sm font-medium italic">"{urlData.analyse_verdict_final || 'Aucun verdict'}"</p>
+                            </div>
+                            {urlData.motifs && (
+                                <div>
+                                    <span className="text-[10px] text-gray-400 uppercase font-bold">Motifs de l'analyse</span>
+                                    <p className="text-sm text-gray-600 leading-relaxed">{urlData.motifs}</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 {/* Footer Actions */}
-                {/* <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
-                    >
-                        Fermer
-                    </button>
-                    <button
-                        onClick={() => navigate('/signaler-un-faux')}
-                        className="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-all shadow-md shadow-red-200 flex items-center gap-2"
-                    >
-                        <AlertTriangle size={16} />
-                        Signaler une erreur
-                    </button>
-                </div> */}
+                <div className="px-6 py-4 border-t bg-gray-50 flex justify-end items-center">
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onClose}
+                            className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                            Fermer
+                        </button>
+                        <button
+                            onClick={() => navigate('/signaler-un-faux')}
+                            className="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-all shadow-md shadow-red-200 flex items-center gap-2"
+                        >
+                            <AlertTriangle size={16} />
+                            Signaler une erreur
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
     );

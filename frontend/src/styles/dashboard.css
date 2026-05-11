@@ -450,3 +450,83 @@
 .footer a:hover {
     color: #1a9a7a;
 }
+/* Nouveaux styles pour les scores et canaux */
+.score-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 40px;
+    display: inline-block;
+}
+
+.score-badge.low {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.score-badge.medium {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.score-badge.high {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.canal-badge {
+    padding: 3px 8px;
+    background-color: #e9ecef;
+    color: #495057;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.analysis-count {
+    display: block;
+    font-size: 10px;
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 2px;
+}
+
+.details-button {
+    padding: 4px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.details-button:hover {
+    background-color: #0056b3;
+}
+
+/* Amélioration du tableau d'analyse */
+.analysis-table th:nth-child(3) { /* Score */
+    width: 80px;
+    text-align: center;
+}
+
+.analysis-table th:nth-child(5) { /* Canal */
+    width: 120px;
+}
+
+.analysis-table th:nth-child(7) { /* Actions */
+    width: 80px;
+    text-align: center;
+}
+
+.analysis-table td:nth-child(3) { /* Score */
+    text-align: center;
+}
+
+.analysis-table td:nth-child(7) { /* Actions */
+    text-align: center;
+}

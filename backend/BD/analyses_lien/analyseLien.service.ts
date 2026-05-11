@@ -33,17 +33,45 @@ export class AnalyseLienService {
       relations: ['lien'],
       order: { date_analyse: 'DESC' }
     });
-    if (existingAnalysis) return { ...existingAnalysis, cached: true };
 
-    // 3. Find/Create Lien (Inchangé)
+    if (existingAnalysis) {
+      existingAnalysis.lien.total_analyses += 1;
+      await this.lienRepo.save(existingAnalysis.lien);
+
+      const cachedAnalyse = this.analyseRepo.create({
+        lien: existingAnalysis.lien,
+        utilisateur: user,
+        score_risque: existingAnalysis.score_risque,
+        niveau_risque: existingAnalysis.niveau_risque,
+        analyse_verdict_final: existingAnalysis.analyse_verdict_final,
+        type_analyse: 'Cache (VirusTotal)',
+        temps_analyse_ms: 0,
+        canal_source: this.formatCanalSource(canalSource),
+        statut: existingAnalysis.statut,
+        motifs: existingAnalysis.motifs,
+      });
+
+      const savedAnalyse = await this.analyseRepo.save(cachedAnalyse);
+      return { 
+        ...await this.analyseRepo.findOne({
+          where: { id_analyse: savedAnalyse.id_analyse },
+          relations: ['lien', 'utilisateur']
+        }), 
+        cached: true 
+      };
+    }
+
+    // 3. Find/Create Lien avec canal source amélioré
     let lien = await this.lienRepo.findOne({ where: { url_hash: urlHash } });
     if (!lien) {
       lien = this.lienRepo.create({
         url: url,
         url_complete: url,
         url_hash: urlHash,
-        source: 'Dashboard Analysis',
+        source: this.determineSource(canalSource),
+        logiciel_source: this.determineLogicielSource(canalSource),
         utilisateur: user,
+        total_analyses: 0
       });
       await this.lienRepo.save(lien);
     }
@@ -104,29 +132,88 @@ export class AnalyseLienService {
       statut = StatutAnalyse.AUTORISE;
     }
 
-    // 6 & 7. Sauvegarde (Inchangé)
+    // 6 & 7. Sauvegarde avec canal source amélioré
     const newAnalyse = this.analyseRepo.create({
       lien,
       utilisateur: user,
-      score_risque: Math.round(score),
+      score_risque: parseFloat(score.toFixed(2)), // Score précis avec 2 décimales
       niveau_risque: niveau,
       analyse_verdict_final: verdict,
       type_analyse: 'VirusTotal API',
       temps_analyse_ms: Math.round(performance.now() - startTime),
-      canal_source: canalSource,
+      canal_source: this.formatCanalSource(canalSource),
       statut,
+      motifs: this.generateMotifs(maliciousCount, totalEngines, score)
     });
 
+    // Incrémenter le compteur d'analyses du lien
     lien.total_analyses += 1;
     await this.lienRepo.save(lien);
-    return await this.analyseRepo.save(newAnalyse);
+    
+    const savedAnalyse = await this.analyseRepo.save(newAnalyse);
+    
+    // Retourner l'analyse avec les relations chargées
+    return await this.analyseRepo.findOne({
+      where: { id_analyse: savedAnalyse.id_analyse },
+      relations: ['lien', 'utilisateur']
+    });
   }
-// Pour l'affichage de l'historique des analyses dans le dashboard
-    async getUserHistory(userId: string) {
+
+  // Méthodes utilitaires pour améliorer la gestion des sources
+  private determineSource(canalSource: string): string {
+    if (canalSource.includes('Extension')) return 'Extension Navigateur';
+    if (canalSource.includes('Dashboard') || canalSource.includes('Web')) return 'Application Web';
+    if (canalSource.includes('WhatsApp')) return 'WhatsApp';
+    if (canalSource.includes('Telegram')) return 'Telegram';
+    if (canalSource.includes('Email')) return 'Email';
+    if (canalSource.includes('SMS')) return 'SMS';
+    return 'Autre';
+  }
+
+  private determineLogicielSource(canalSource: string): string | null {
+    if (canalSource.includes('Chrome')) return 'Google Chrome';
+    if (canalSource.includes('Firefox')) return 'Mozilla Firefox';
+    if (canalSource.includes('Safari')) return 'Safari';
+    if (canalSource.includes('Edge')) return 'Microsoft Edge';
+    if (canalSource.includes('WhatsApp')) return 'WhatsApp';
+    if (canalSource.includes('Telegram')) return 'Telegram';
+    return null;
+  }
+
+  private formatCanalSource(canalSource: string): string {
+    // Nettoyer et formater le canal source pour l'affichage
+    return canalSource
+      .replace('Extension Navigateur', 'Extension Chrome')
+      .replace('Web Dashboard', 'Application Web')
+      .replace('(Direct)', '(Connexion directe)');
+  }
+
+  private generateMotifs(maliciousCount: number, totalEngines: number, score: number): string {
+    const motifs: string[] = [];
+    
+    if (maliciousCount > 0) {
+      motifs.push(`${maliciousCount} moteur(s) de sécurité ont détecté des menaces`);
+    }
+    
+    if (score > 50) {
+      motifs.push('Score de risque élevé (>50%)');
+    } else if (score > 10) {
+      motifs.push('Score de risque modéré (>10%)');
+    } else {
+      motifs.push('Aucune menace détectée par les moteurs de sécurité');
+    }
+    
+    motifs.push(`Analysé par ${totalEngines} moteur(s) de sécurité`);
+    
+    return motifs.join('; ');
+  }
+  // Pour l'affichage de l'historique des analyses dans le dashboard
+  async getUserHistory(userId: string) {
     return await this.analyseRepo.find({
       where: { utilisateur: { id_utilisateur: userId } },
       relations: ['lien'], // Pour récupérer l'objet 'lien' et donc son URL
       order: { date_analyse: 'DESC' }, // Les plus récentes en premier
+      take: 10 // Limiter aux 10 dernières par exemple
     });
   }
 }

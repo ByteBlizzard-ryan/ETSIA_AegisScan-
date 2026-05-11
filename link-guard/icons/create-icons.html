@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Créer les icônes AegisScan</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .icon-container { margin: 20px 0; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Générateur d'icônes AegisScan</h1>
+    <p>Cliquez sur "Générer" puis faites clic droit > "Enregistrer l'image sous" sur chaque icône.</p>
+    
+    <button onclick="generateIcons()">Générer les icônes</button>
+    
+    <div class="icon-container">
+        <h3>Icône 16x16</h3>
+        <canvas id="icon16" width="16" height="16"></canvas>
+    </div>
+    
+    <div class="icon-container">
+        <h3>Icône 48x48</h3>
+        <canvas id="icon48" width="48" height="48"></canvas>
+    </div>
+    
+    <div class="icon-container">
+        <h3>Icône 128x128</h3>
+        <canvas id="icon128" width="128" height="128"></canvas>
+    </div>
+
+    <script>
+        function generateIcons() {
+            generateIcon('icon16', 16);
+            generateIcon('icon48', 48);
+            generateIcon('icon128', 128);
+        }
+        
+        function generateIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Fond bleu
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Bouclier blanc
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const shieldWidth = size * 0.6;
+            const shieldHeight = size * 0.7;
+            
+            // Forme de bouclier
+            ctx.moveTo(centerX, centerY - shieldHeight/2);
+            ctx.quadraticCurveTo(centerX + shieldWidth/2, centerY - shieldHeight/2, centerX + shieldWidth/2, centerY);
+            ctx.quadraticCurveTo(centerX + shieldWidth/2, centerY + shieldHeight/3, centerX, centerY + shieldHeight/2);
+            ctx.quadraticCurveTo(centerX - shieldWidth/2, centerY + shieldHeight/3, centerX - shieldWidth/2, centerY);
+            ctx.quadraticCurveTo(centerX - shieldWidth/2, centerY - shieldHeight/2, centerX, centerY - shieldHeight/2);
+            
+            ctx.fill();
+            
+            // Coche verte
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = Math.max(2, size / 16);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX - shieldWidth/4, centerY);
+            ctx.lineTo(centerX - shieldWidth/8, centerY + shieldHeight/8);
+            ctx.lineTo(centerX + shieldWidth/4, centerY - shieldHeight/8);
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>

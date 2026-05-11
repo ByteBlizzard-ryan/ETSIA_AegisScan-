@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
+import { extensionSync } from "../services/extensionSync";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -48,7 +49,10 @@ export default function Login() {
       // 2. On stocke l'ID utilisateur SEUL (C'est ce que ton Quiz.tsx va chercher)
       localStorage.setItem("user_id", data.user.id);
 
-      // 3. Redirection vers le dashboard
+      // 3. Synchroniser le token avec l'extension navigateur
+      await extensionSync.syncToken(data.access_token);
+
+      // 4. Redirection vers le dashboard
       navigate("/dashboard");
 
     } catch (err: any) {

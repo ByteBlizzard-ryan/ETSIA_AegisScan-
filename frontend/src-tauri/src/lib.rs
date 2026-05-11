@@ -32,6 +32,25 @@ async fn get_user_stats() -> Result<String, String> {
     }).to_string())
 }
 
+// Command to check extension status and sync token
+#[tauri::command]
+async fn sync_extension_token(token: String) -> Result<String, String> {
+    // Cette commande peut être utilisée pour synchroniser le token avec l'extension
+    // via des mécanismes spécifiques à Tauri si nécessaire
+    Ok(format!("Token synchronisé: {}", token.len()))
+}
+
+// Command to get app info for extension communication
+#[tauri::command]
+async fn get_app_info() -> Result<String, String> {
+    Ok(serde_json::json!({
+        "mode": "tauri",
+        "version": "0.1.0",
+        "name": "AegisScan",
+        "extensionSupport": true
+    }).to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -52,7 +71,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             analyze_url,
-            get_user_stats
+            get_user_stats,
+            sync_extension_token,
+            get_app_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 320px;
+      padding: 0;
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f8fafc;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: white;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .header p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .content {
+      padding: 16px;
+    }
+    
+    .status-card {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .status-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .status-icon {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .status-icon.connected {
+      background: #10b981;
+    }
+    
+    .status-icon.disconnected {
+      background: #ef4444;
+    }
+    
+    .status-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #1f2937;
+    }
+    
+    .status-description {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+    
+    .connect-section {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .connect-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+    
+    .connect-description {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    
+    .connect-button {
+      width: 100%;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .connect-button:hover {
+      background: #2563eb;
+    }
+    
+    .connect-button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .stat-item {
+      background: white;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    
+    .stat-label {
+      font-size: 10px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+    
+    .footer {
+      padding: 12px 16px;
+      border-top: 1px solid #e2e8f0;
+      background: white;
+      text-align: center;
+    }
+    
+    .footer-link {
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 11px;
+    }
+    
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>AegisScan Protection</h1>
+    <p>Extension de sécurité des liens</p>
+  </div>
+  
+  <div class="content">
+    <div class="status-card">
+      <div class="status-header">
+        <div class="status-icon" id="statusIcon"></div>
+        <div class="status-title" id="statusTitle">Vérification...</div>
+      </div>
+      <div class="status-description" id="statusDescription">
+        Connexion à AegisScan en cours...
+      </div>
+    </div>
+    
+    <div class="connect-section" id="connectSection" style="display: none;">
+      <div class="connect-title">Connexion requise</div>
+      <div class="connect-description">
+        Pour utiliser la protection automatique, connectez-vous d'abord à votre compte AegisScan dans l'application web.
+      </div>
+      <button class="connect-button" id="connectButton">
+        Ouvrir AegisScan
+      </button>
+    </div>
+    
+    <div class="stats" id="statsSection" style="display: none;">
+      <div class="stat-item">
+        <div class="stat-value" id="linksAnalyzed">-</div>
+        <div class="stat-label">Liens analysés</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="threatsBlocked">-</div>
+        <div class="stat-label">Menaces bloquées</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <a href="#" class="footer-link" id="dashboardLink">Ouvrir le tableau de bord</a>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

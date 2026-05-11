@@ -22,15 +22,18 @@ class ExtensionSyncService {
       return;
     }
 
-    // Attendre que React soit complètement monté
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => this.detectExtension(), 1000);
-      });
-    } else {
-      // Si le DOM est déjà chargé, attendre un peu plus pour React
-      setTimeout(() => this.detectExtension(), 1500);
-    }
+    // Démarrer la détection immédiatement
+    this.detectExtension();
+    
+    // Répéter la détection toutes les 5 secondes si pas trouvée
+    const detectionInterval = setInterval(() => {
+      if (!this.isExtensionAvailable) {
+        console.log('[AegisScan] Nouvelle tentative de détection...');
+        this.detectExtension();
+      } else {
+        clearInterval(detectionInterval);
+      }
+    }, 5000);
   }
 
   private async detectExtension() {
@@ -46,6 +49,15 @@ class ExtensionSyncService {
             clearInterval(this.checkInterval);
             this.checkInterval = null;
           }
+        }
+        
+        // Écouter les confirmations de synchronisation
+        if (event.data.type === 'AEGISSCAN_TOKEN_SYNC_SUCCESS') {
+          console.log(`[AegisScan] ✅ Confirmation de synchronisation reçue (mode: ${event.data.appMode || 'unknown'})`);
+        }
+        
+        if (event.data.type === 'AEGISSCAN_TOKEN_SYNC_FAILED') {
+          console.error(`[AegisScan] ❌ Échec de synchronisation signalé par l'extension:`, event.data.error);
         }
       }
     });
@@ -126,14 +138,49 @@ class ExtensionSyncService {
     scheduleNextCheck();
   }
 
-  async syncToken(token: string) {
+  async syncToken(token: string): Promise<boolean> {
     if (!this.isExtensionAvailable) {
       console.warn(`[AegisScan] Extension non disponible pour la synchronisation (mode: ${this.isTauriMode ? 'Tauri' : 'Web'})`);
       return false;
     }
 
     try {
+      // Créer une promesse qui attend la confirmation de l'extension
+      const syncPromise = new Promise<boolean>((resolve) => {
+        const timeout = setTimeout(() => {
+          console.warn('[AegisScan] ⏱️ TIMEOUT - Pas de confirmation de synchronisation reçue après 5 secondes');
+          console.warn('[AegisScan] Cela peut indiquer que l\'extension ne répond pas ou n\'est pas correctement chargée');
+          resolve(false);
+        }, 5000); // 5 secondes de timeout
+
+        const messageHandler = (event: MessageEvent) => {
+          console.log('[AegisScan] Message reçu pendant la synchronisation:', event.data);
+          
+          if (event.data.source === 'aegisscan-extension') {
+            if (event.data.type === 'AEGISSCAN_TOKEN_SYNC_SUCCESS') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', messageHandler);
+              console.log('[AegisScan] ✅ Synchronisation confirmée par l\'extension');
+              resolve(true);
+            } else if (event.data.type === 'AEGISSCAN_TOKEN_SYNC_FAILED') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', messageHandler);
+              console.error('[AegisScan] ❌ Synchronisation échouée par l\'extension:', event.data.error);
+              resolve(false);
+            }
+          }
+        };
+
+        window.addEventListener('message', messageHandler);
+        console.log('[AegisScan] 👂 Écoute des messages de confirmation activée');
+      });
+
       // Envoyer le token à l'extension via postMessage
+      console.log('[AegisScan] 📤 Envoi du token à l\'extension...');
+      console.log('[AegisScan] Token à envoyer (longueur):', token.length);
+      console.log('[AegisScan] Mode:', this.isTauriMode ? 'tauri' : 'web');
+      console.log('[AegisScan] Origin:', window.location.origin);
+      
       window.postMessage({
         type: 'AEGISSCAN_TOKEN_SYNC',
         token: token,
@@ -142,8 +189,11 @@ class ExtensionSyncService {
         origin: window.location.origin
       }, '*');
 
-      console.log(`[AegisScan] Token synchronisé avec l'extension (mode: ${this.isTauriMode ? 'Tauri' : 'Web'})`);
-      return true;
+      console.log(`[AegisScan] 📨 Message envoyé, attente de confirmation...`);
+      
+      // Attendre la confirmation
+      return await syncPromise;
+      
     } catch (error) {
       console.error('[AegisScan] Erreur synchronisation token:', error);
       return false;
@@ -158,7 +208,7 @@ class ExtensionSyncService {
     return false;
   }
 
-  async clearToken() {
+  async clearToken(): Promise<boolean> {
     if (!this.isExtensionAvailable) {
       return false;
     }
@@ -171,7 +221,7 @@ class ExtensionSyncService {
         origin: window.location.origin
       }, '*');
 
-      console.log(`[AegisScan] Token supprimé de l'extension (mode: ${this.isTauriMode ? 'Tauri' : 'Web'})`);
+      console.log(`[AegisScan] Demande de suppression de token envoyée à l'extension (mode: ${this.isTauriMode ? 'Tauri' : 'Web'})`);
       return true;
     } catch (error) {
       console.error('[AegisScan] Erreur suppression token:', error);

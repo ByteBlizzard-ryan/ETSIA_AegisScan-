@@ -275,8 +275,12 @@ export function initTauriNativeInterceptor() {
     e.stopImmediatePropagation();
 
     try {
-      // Utiliser l'instance de service existante
+  // Utiliser l'instance de service existante
       const result: any = await (linkInterceptor as any).analyzeLink(url, 'Tauri OS App');
+
+      console.log("[AegisScan Tauri] Résultat de l'analyse:", result);
+      console.log("[AegisScan Tauri] Statut du lien:", result?.statut);
+      console.log("[AegisScan Tauri] Niveau de risque:", result?.niveau_risque);
 
       // Déclencher l'événement pour mettre à jour l'historique
       window.dispatchEvent(new CustomEvent('link-analyzed', { detail: result }));

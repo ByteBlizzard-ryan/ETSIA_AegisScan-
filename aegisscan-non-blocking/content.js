@@ -12,10 +12,25 @@
 
   // Vérifier la disponibilité de l'API Chrome
   const isChromeExtensionContext = () => {
-    return typeof chrome !== 'undefined' && 
-           chrome.runtime && 
-           chrome.runtime.sendMessage && 
-           chrome.runtime.id;
+    try {
+      const hasChrome = typeof chrome !== 'undefined';
+      const hasRuntime = hasChrome && chrome.runtime;
+      const hasSendMessage = hasRuntime && typeof chrome.runtime.sendMessage === 'function';
+      const hasId = hasRuntime && chrome.runtime.id;
+      
+      console.log('[AegisScan Extension] Diagnostic contexte Chrome:', {
+        hasChrome,
+        hasRuntime,
+        hasSendMessage,
+        hasId,
+        runtimeId: chrome?.runtime?.id
+      });
+      
+      return hasChrome && hasRuntime && hasSendMessage && hasId;
+    } catch (error) {
+      console.error('[AegisScan Extension] Erreur vérification contexte:', error);
+      return false;
+    }
   };
 
   // État de l'extension
@@ -35,42 +50,146 @@
         timestamp: Date.now()
       }, '*');
       console.log('[AegisScan Extension] Signal de présence envoyé');
+    } else {
+      console.warn('[AegisScan Extension] Extension non prête, nouvelle tentative dans 2 secondes...');
+      // Réessayer après 2 secondes
+      setTimeout(() => {
+        extensionReady = isChromeExtensionContext();
+        console.log('[AegisScan Extension] Deuxième tentative - État:', extensionReady ? 'Connectée' : 'Déconnectée');
+        
+        if (extensionReady) {
+          window.postMessage({
+            type: 'AEGISSCAN_EXTENSION_READY',
+            source: 'aegisscan-extension',
+            timestamp: Date.now()
+          }, '*');
+          console.log('[AegisScan Extension] Signal de présence envoyé (2ème tentative)');
+        }
+      }, 2000);
     }
   }, 100);
 
   // Écouter les messages de synchronisation depuis l'application web
   window.addEventListener('message', async (event) => {
-    if (event.data.source !== 'aegisscan-web') return;
+    // Log de tous les messages reçus pour debug
+    if (event.data.source === 'aegisscan-web') {
+      console.log('[AegisScan Extension] 📨 Message reçu de l\'application:', {
+        type: event.data.type,
+        mode: event.data.mode,
+        origin: event.data.origin,
+        hasToken: !!event.data.token
+      });
+    } else {
+      return; // Ignorer les autres sources
+    }
     
-    console.log('[AegisScan Extension] Message reçu:', event.data.type, 'Mode:', event.data.mode || 'web');
+    const appMode = event.data.mode || 'web';
     
     if (event.data.type === 'AEGISSCAN_TOKEN_SYNC') {
+      console.log('[AegisScan Extension] 🔄 Début traitement synchronisation token...');
+      console.log('[AegisScan Extension] État extension:', {
+        extensionReady,
+        isChromeExtensionContext: isChromeExtensionContext(),
+        hasToken: !!event.data.token,
+        tokenLength: event.data.token ? event.data.token.length : 0
+      });
+      
       try {
-        if (extensionReady && isChromeExtensionContext()) {
-          await chrome.runtime.sendMessage({
-            type: 'SET_TOKEN',
-            token: event.data.token
-          });
+        if (!extensionReady) {
+          console.error('[AegisScan Extension] ❌ Extension marquée comme non prête');
+          window.postMessage({
+            type: 'AEGISSCAN_TOKEN_SYNC_FAILED',
+            source: 'aegisscan-extension',
+            error: 'Extension non prête - extensionReady = false',
+            timestamp: Date.now(),
+            appMode: appMode
+          }, '*');
+          return;
+        }
+        
+        if (!isChromeExtensionContext()) {
+          console.error('[AegisScan Extension] ❌ Contexte Chrome extension invalide');
+          console.error('[AegisScan Extension] chrome object:', typeof chrome);
+          console.error('[AegisScan Extension] chrome.runtime:', typeof chrome?.runtime);
+          console.error('[AegisScan Extension] chrome.runtime.sendMessage:', typeof chrome?.runtime?.sendMessage);
+          
+          window.postMessage({
+            type: 'AEGISSCAN_TOKEN_SYNC_FAILED',
+            source: 'aegisscan-extension',
+            error: 'Contexte Chrome extension invalide - APIs non disponibles',
+            timestamp: Date.now(),
+            appMode: appMode
+          }, '*');
+          return;
+        }
+        
+        console.log('[AegisScan Extension] 📤 Envoi du token au background script...');
+        
+        const response = await chrome.runtime.sendMessage({
+          type: 'SET_TOKEN',
+          token: event.data.token
+        });
+        
+        console.log('[AegisScan Extension] 📨 Réponse du background script:', response);
+        
+        if (response && response.success) {
           hasToken = true;
-          console.log(`[AegisScan Extension] Token synchronisé depuis l'application ${event.data.mode || 'web'}`);
+          console.log(`[AegisScan Extension] ✅ Token synchronisé avec succès depuis l'application ${appMode}`);
+          
+          // Confirmer la synchronisation à l'application
+          window.postMessage({
+            type: 'AEGISSCAN_TOKEN_SYNC_SUCCESS',
+            source: 'aegisscan-extension',
+            timestamp: Date.now(),
+            appMode: appMode
+          }, '*');
         } else {
-          console.warn('[AegisScan Extension] Extension non prête pour sync token');
+          const errorMsg = response?.error || 'Réponse invalide du background script';
+          console.error(`[AegisScan Extension] ❌ Échec synchronisation token:`, errorMsg);
+          
+          // Signaler l'échec à l'application
+          window.postMessage({
+            type: 'AEGISSCAN_TOKEN_SYNC_FAILED',
+            source: 'aegisscan-extension',
+            error: errorMsg,
+            timestamp: Date.now(),
+            appMode: appMode
+          }, '*');
         }
       } catch (error) {
-        console.error('[AegisScan Extension] Erreur sync token:', error);
-        extensionReady = false; // Marquer comme déconnectée
+        console.error('[AegisScan Extension] ❌ Erreur sync token:', error);
+        console.error('[AegisScan Extension] Stack trace:', error.stack);
+        
+        // Marquer comme déconnectée seulement si c'est une erreur de contexte
+        if (error.message && error.message.includes('Extension context invalidated')) {
+          extensionReady = false;
+        }
+        
+        // Signaler l'erreur à l'application
+        window.postMessage({
+          type: 'AEGISSCAN_TOKEN_SYNC_FAILED',
+          source: 'aegisscan-extension',
+          error: error.message || 'Erreur inconnue lors de la synchronisation',
+          timestamp: Date.now(),
+          appMode: appMode
+        }, '*');
       }
     }
     
     if (event.data.type === 'AEGISSCAN_TOKEN_CLEAR') {
       try {
         if (extensionReady && isChromeExtensionContext()) {
-          await chrome.runtime.sendMessage({
+          const response = await chrome.runtime.sendMessage({
             type: 'SET_TOKEN',
             token: null
           });
-          hasToken = false;
-          console.log(`[AegisScan Extension] Token supprimé (mode: ${event.data.mode || 'web'})`);
+          
+          if (response && response.success) {
+            hasToken = false;
+            console.log(`[AegisScan Extension] Token supprimé (mode: ${appMode})`);
+          } else {
+            console.warn('[AegisScan Extension] Échec suppression token:', response?.error);
+          }
         } else {
           console.warn('[AegisScan Extension] Extension non prête pour clear token');
         }

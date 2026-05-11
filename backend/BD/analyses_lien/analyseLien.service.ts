@@ -251,9 +251,55 @@ export class AnalyseLienService {
       }
     });
 
+    // Compter les liens bloqués (statut BLOQUE)
+    const blocked = await this.analyseRepo.count({
+      where: {
+        utilisateur: { id_utilisateur: userId },
+        statut: StatutAnalyse.BLOQUE
+      }
+    });
+
     return {
       totalLinks: total,
-      threatsDetected: threats
+      threatsDetected: threats,
+      linksBlocked: blocked
     };
   }
-}
+
+  // Nouvelle méthode pour bloquer un lien et ignorer l'avertissement
+  async blockLinkAndIgnoreWarning(linkId: string, userId: string, motifIgnore: string) {
+    // Trouver la dernière analyse du lien pour cet utilisateur
+    const lastAnalysis = await this.analyseRepo.findOne({
+      where: {
+        lien: { id_lien: linkId },
+        utilisateur: { id_utilisateur: userId }
+      },
+      relations: ['lien', 'utilisateur'],
+      order: { date_analyse: 'DESC' }
+    });
+
+    if (!lastAnalysis) {
+      throw new Error('Aucune analyse trouvée pour ce lien');
+    }
+
+    // Créer une nouvelle analyse avec statut bloqué et motif d'ignorance
+    const newAnalyse = this.analyseRepo.create({
+      lien: lastAnalysis.lien,
+      utilisateur: lastAnalysis.utilisateur,
+      score_risque: lastAnalysis.score_risque,
+      niveau_risque: NiveauRisque.SUSPECT, // Marquer comme suspect car ignoré
+      analyse_verdict_final: 'Lien suspect ignoré par l\'utilisateur',
+      type_analyse: 'Action utilisateur',
+      temps_analyse_ms: 0,
+      canal_source: 'Interface utilisateur',
+      statut: StatutAnalyse.BLOQUE,
+      motifs: `Lien signalé suspect et ignoré par l'utilisateur. Motif original: ${lastAnalysis.motifs}. Raison de l'ignorance: ${motifIgnore}`
+    });
+
+    // Incrémenter le compteur d'analyses du lien
+    lastAnalysis.lien.total_analyses += 1;
+    await this.lienRepo.save(lastAnalysis.lien);
+
+    return await this.analyseRepo.save(newAnalyse);
+  }
+}

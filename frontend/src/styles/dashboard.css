@@ -319,11 +319,13 @@
 }
 
 .risk-badge.medium {
-    color: #6a7a8a;
+    background-color: #fff3cd;
+    color: #856404;
 }
 
 .risk-badge.low {
-    color: #6a7a8a;
+    background-color: #d4edda;
+    color: #155724;
 }
 
 .status-badge {
@@ -337,7 +339,7 @@
 .status-badge.blocked {
     color: #dc2626;
     border-color: #fecaca;
-    background-color: transparent;
+    background-color: #fef2f2;
 }
 
 .status-badge.cleaned {
@@ -423,6 +425,77 @@
 .analysis-hint {
     font-size: 13px;
     color: #6a7a8a;
+}
+
+/* Styles pour les messages de résultat d'analyse */
+.analysis-result {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid;
+    animation: slideIn 0.3s ease-out;
+}
+
+.analysis-result.success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.analysis-result.warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+.analysis-result.error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.result-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.result-message {
+    font-size: 14px;
+    font-weight: 500;
+    flex: 1;
+}
+
+.close-result {
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+    padding: 0;
+    margin-left: 12px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-result:hover {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Footer */
@@ -529,4 +602,147 @@
 
 .analysis-table td:nth-child(7) { /* Actions */
     text-align: center;
+}
+
+/* Styles pour le modal d'ignorance d'avertissement */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a3a4a;
+    margin-bottom: 16px;
+}
+
+.modal-content p {
+    font-size: 14px;
+    color: #6a7a8a;
+    margin-bottom: 12px;
+}
+
+.url-display {
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #495057;
+    word-break: break-all;
+    margin-bottom: 16px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a3a4a;
+    margin-bottom: 8px;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e0e5ea;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a3a4a;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #1a9a7a;
+    box-shadow: 0 0 0 3px rgba(26, 154, 122, 0.1);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.cancel-button {
+    padding: 10px 20px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268;
+}
+
+.confirm-button {
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.confirm-button:hover:not(:disabled) {
+    background-color: #c82333;
+}
+
+.confirm-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Amélioration des badges de risque */
+.risk-badge.medium {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.risk-badge.low {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* Lien désactivé pour les liens dangereux */
+.url-link.disabled-link {
+    color: #6c757d;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.url-link.disabled-link:hover {
+    text-decoration: line-through;
 }

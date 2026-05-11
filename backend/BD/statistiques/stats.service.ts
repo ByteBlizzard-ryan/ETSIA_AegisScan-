@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
-import { AnalysesLien, NiveauRisque } from 'BD/analyses_lien/analyses_lien.entity';
+import { AnalysesLien, NiveauRisque, StatutAnalyse } from 'BD/analyses_lien/analyses_lien.entity';
 
 @Injectable()
 export class StatsService {
@@ -14,7 +14,12 @@ export class StatsService {
     try {
       // 1. Calcul de la date de début (Minuit pour inclure toute la journée)
       const startDate = new Date();
-      startDate.setDate(startDate.getDate() - (days - 1));
+      if (days < 10000) { // Si ce n'est pas "tous", calculer la vraie date de début
+        startDate.setDate(startDate.getDate() - (days - 1));
+      } else {
+        // Pour "tous", prendre une date très ancienne
+        startDate.setFullYear(2020, 0, 1);
+      }
       startDate.setHours(0, 0, 0, 0);
 
       // 2. Récupération des analyses via QueryBuilder pour plus de précision avec Postgres
@@ -37,26 +42,32 @@ export class StatsService {
         a.niveau_risque === NiveauRisque.DANGEREUX || a.niveau_risque === NiveauRisque.SUSPECT
       ).length;
 
-      // 4. Distribution pour le Pie Chart
+      // Compter les liens bloqués
+      const linksBlocked = analyses.filter(a => 
+        a.statut === StatutAnalyse.BLOQUE
+      ).length;
+
+      // 4. Distribution pour le Pie Chart avec 3 couleurs
       const pieChart = [
-        { label: 'Sûr', value: analyses.filter(a => a.niveau_risque === NiveauRisque.SUR).length },
-        { label: 'Suspect', value: analyses.filter(a => a.niveau_risque === NiveauRisque.SUSPECT).length },
-        { label: 'Dangereux', value: analyses.filter(a => a.niveau_risque === NiveauRisque.DANGEREUX).length },
+        { label: 'Sûr', value: analyses.filter(a => a.niveau_risque === NiveauRisque.SUR).length, color: '#10b981' },
+        { label: 'Suspect', value: analyses.filter(a => a.niveau_risque === NiveauRisque.SUSPECT).length, color: '#f59e0b' },
+        { label: 'Dangereux', value: analyses.filter(a => a.niveau_risque === NiveauRisque.DANGEREUX).length, color: '#ef4444' },
       ];
 
-      // 5. Préparation du Line Chart (Activité par jour)
-      // On initialise le map avec des 0 pour chaque jour de la période
+      // 5. Préparation du Line Chart (Performance des liens - évolution par jour)
+      const actualDays = days < 10000 ? days : this.calculateDaysSinceFirstAnalysis(analyses);
       const dailyMap = new Map<string, number>();
-      for (let i = 0; i < days; i++) {
+      
+      // Initialiser avec des 0 pour chaque jour de la période
+      for (let i = 0; i < actualDays; i++) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         const isoDate = d.toISOString().split('T')[0];
         dailyMap.set(isoDate, 0);
       }
 
-      // On remplit avec les données réelles
+      // Remplir avec les données réelles
       analyses.forEach(a => {
-        // On s'assure que l'objet date est valide avant le split
         const dateObj = typeof a.date_analyse === 'string' ? new Date(a.date_analyse) : a.date_analyse;
         const dateKey = dateObj.toISOString().split('T')[0];
         
@@ -70,11 +81,16 @@ export class StatsService {
         .map(([date, count]) => ({ date, count }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
+      // 6. Calcul du taux de protection réel
+      const safeLinks = analyses.filter(a => a.niveau_risque === NiveauRisque.SUR).length;
+      const protectionRate = totalLinks > 0 ? ((safeLinks / totalLinks) * 100).toFixed(1) + "%" : "100%";
+
       return {
         totalLinks,
         threatsDetected,
+        linksBlocked,
         averageRiskScore,
-        protectionRate: totalLinks > 0 ? "98.5%" : "100%", // Exemple de calcul factice ou fixe
+        protectionRate,
         pieChart,
         lineChart,
       };
@@ -82,5 +98,20 @@ export class StatsService {
       console.error("Erreur détaillée StatsService:", error);
       throw error;
     }
+  }
+
+  private calculateDaysSinceFirstAnalysis(analyses: AnalysesLien[]): number {
+    if (analyses.length === 0) return 30; // Par défaut 30 jours si pas d'analyses
+    
+    const firstAnalysis = analyses[0];
+    const firstDate = typeof firstAnalysis.date_analyse === 'string' 
+      ? new Date(firstAnalysis.date_analyse) 
+      : firstAnalysis.date_analyse;
+    
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - firstDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return Math.max(diffDays, 7); // Minimum 7 jours pour avoir un graphique lisible
   }
 }

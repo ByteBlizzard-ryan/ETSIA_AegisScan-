@@ -42,4 +42,12 @@ export class AnalyseLienController {
     const userId = req.user.id_utilisateur;
     return await this.analyseService.getUserStats(userId);
   }
+
+  // Nouvelle route pour bloquer un lien et ignorer l'avertissement
+  @UseGuards(JwtAuthGuard)
+  @Post('block-and-ignore')
+  async blockAndIgnore(@Body() body: { linkId: string, motifIgnore: string }, @Req() req) {
+    const userId = req.user.id_utilisateur;
+    return await this.analyseService.blockLinkAndIgnoreWarning(body.linkId, userId, body.motifIgnore);
+  }
 }

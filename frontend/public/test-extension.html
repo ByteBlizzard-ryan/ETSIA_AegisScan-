@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Extension AegisScan</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🛡️ Test Extension AegisScan</h1>
+    
+    <div class="test-section">
+        <h2>État de l'Extension</h2>
+        <p>Cette page permet de tester si l'extension AegisScan fonctionne correctement.</p>
+        <button class="btn-primary" onclick="checkExtension()">Vérifier Extension</button>
+        <button class="btn-success" onclick="testTokenSync()">Test Synchronisation Token</button>
+        <button class="btn-info" onclick="testDirectMessage()">Test Message Direct</button>
+        <button class="btn-warning" onclick="clearLogs()">Effacer Logs</button>
+        <div id="extension-status">Statut: Non vérifié</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test de Liens</h2>
+        <p>Cliquez sur ces liens pour tester l'interception de l'extension :</p>
+        
+        <h3>Liens de Test Sûrs</h3>
+        <a href="https://www.google.com" class="test-link" target="_blank">Google (Sûr)</a>
+        <a href="https://www.github.com" class="test-link" target="_blank">GitHub (Sûr)</a>
+        <a href="https://www.wikipedia.org" class="test-link" target="_blank">Wikipedia (Sûr)</a>
+        
+        <h3>Liens de Test Suspects</h3>
+        <a href="https://example-suspicious-site.com" class="test-link" target="_blank">Site Suspect 1</a>
+        <a href="https://fake-bank-login.com" class="test-link" target="_blank">Site Suspect 2</a>
+        
+        <h3>Liens de Test Dangereux</h3>
+        <a href="https://malware-test-site.com" class="test-link" target="_blank">Site Dangereux 1</a>
+        <a href="https://phishing-example.com" class="test-link" target="_blank">Site Dangereux 2</a>
+    </div>
+
+    <div class="test-section">
+        <h2>Logs de Debug</h2>
+        <div id="logs" class="log">Logs d'activité...\n</div>
+    </div>
+
+    <script>
+        // Fonction pour logger les messages
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logsDiv = document.getElementById('logs');
+            logsDiv.textContent += `[${timestamp}] ${message}\n`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(`[Test Extension] ${message}`);
+        }
+
+        // Effacer les logs
+        function clearLogs() {
+            document.getElementById('logs').textContent = 'Logs effacés...\n';
+        }
+
+        // Vérifier si l'extension est présente
+        function checkExtension() {
+            log('Vérification de la présence de l\'extension...');
+            
+            // Méthode 1: Vérifier les éléments injectés
+            if (window.__linkGuardActive) {
+                log('✅ Extension détectée via __linkGuardActive');
+                updateStatus('Extension détectée (Active)', 'success');
+                return true;
+            }
+
+            // Méthode 2: Vérifier les éléments DOM
+            const extensionElements = document.querySelector('#lg-toast, #lg-overlay');
+            if (extensionElements) {
+                log('✅ Extension détectée via éléments DOM');
+                updateStatus('Extension détectée (DOM)', 'success');
+                return true;
+            }
+
+            // Méthode 3: Envoyer un message de test
+            log('Envoi d\'un message de test à l\'extension...');
+            window.postMessage({
+                type: 'AEGISSCAN_EXTENSION_CHECK',
+                source: 'aegisscan-web',
+                mode: 'test',
+                origin: window.location.origin,
+                timestamp: Date.now()
+            }, '*');
+
+            // Attendre une réponse
+            let responseReceived = false;
+            const messageHandler = (event) => {
+                if (event.data.source === 'aegisscan-extension' && event.data.type === 'AEGISSCAN_EXTENSION_RESPONSE') {
+                    responseReceived = true;
+                    log('✅ Extension détectée via message de réponse');
+                    updateStatus('Extension détectée (Message)', 'success');
+                    window.removeEventListener('message', messageHandler);
+                }
+            };
+
+            window.addEventListener('message', messageHandler);
+
+            // Timeout après 3 secondes
+            setTimeout(() => {
+                if (!responseReceived) {
+                    log('❌ Extension non détectée - Aucune réponse reçue');
+                    updateStatus('Extension NON détectée', 'error');
+                    window.removeEventListener('message', messageHandler);
+                }
+            }, 3000);
+        }
+
+        // Test de synchronisation de token
+        function testTokenSync() {
+            log('Test de synchronisation de token...');
+            
+            // Créer un token de test valide avec une expiration future
+            const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+            const payload = btoa(JSON.stringify({ 
+                sub: "test-user", 
+                name: "Test User", 
+                exp: Math.floor(Date.now() / 1000) + 3600 // Expire dans 1 heure
+            }));
+            const signature = "test-signature-for-debugging";
+            const testToken = `${header}.${payload}.${signature}`;
+            
+            log('✅ Utilisation d\'un token de test valide (expire dans 1h)');
+            
+            // Envoyer le token à l'extension
+            log('📤 Envoi du token à l\'extension...');
+            window.postMessage({
+                type: 'AEGISSCAN_TOKEN_SYNC',
+                token: testToken,
+                source: 'aegisscan-web',
+                mode: 'test',
+                origin: window.location.origin
+            }, '*');
+
+            log('Token envoyé, attente de la réponse...');
+
+            // Écouter la confirmation
+            let responseReceived = false;
+            const syncHandler = (event) => {
+                if (event.data.source === 'aegisscan-extension') {
+                    responseReceived = true;
+                    if (event.data.type === 'AEGISSCAN_TOKEN_SYNC_SUCCESS') {
+                        log('✅ Synchronisation de token réussie');
+                        updateStatus('Token synchronisé', 'success');
+                    } else if (event.data.type === 'AEGISSCAN_TOKEN_SYNC_FAILED') {
+                        log('❌ Synchronisation de token échouée: ' + event.data.error);
+                        updateStatus('Échec synchronisation: ' + event.data.error, 'error');
+                    }
+                    window.removeEventListener('message', syncHandler);
+                }
+            };
+
+            window.addEventListener('message', syncHandler);
+
+            // Timeout
+            setTimeout(() => {
+                if (!responseReceived) {
+                    log('⏱️ Timeout - Pas de confirmation de synchronisation (5s)');
+                    updateStatus('Timeout synchronisation', 'error');
+                }
+                window.removeEventListener('message', syncHandler);
+            }, 5000);
+        }
+
+        // Test de message direct
+        function testDirectMessage() {
+            log('Test de message direct à l\'extension...');
+            
+            // Envoyer un message simple
+            window.postMessage({
+                type: 'AEGISSCAN_EXTENSION_CHECK',
+                source: 'aegisscan-web',
+                mode: 'test-direct',
+                origin: window.location.origin,
+                timestamp: Date.now()
+            }, '*');
+
+            log('Message de test envoyé');
+
+            // Écouter la réponse
+            const directHandler = (event) => {
+                if (event.data.source === 'aegisscan-extension') {
+                    log('📨 Réponse reçue: ' + event.data.type);
+                    if (event.data.type === 'AEGISSCAN_EXTENSION_RESPONSE') {
+                        log('✅ Communication directe fonctionnelle');
+                        updateStatus('Communication OK', 'success');
+                    }
+                    window.removeEventListener('message', directHandler);
+                }
+            };
+
+            window.addEventListener('message', directHandler);
+
+            setTimeout(() => {
+                log('⏱️ Timeout - Pas de réponse au message direct');
+                window.removeEventListener('message', directHandler);
+            }, 3000);
+        }
+
+        // Mettre à jour le statut
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('extension-status');
+            statusDiv.textContent = `Statut: ${message}`;
+            statusDiv.className = type === 'success' ? 'text-success' : type === 'error' ? 'text-danger' : '';
+        }
+
+        // Écouter tous les messages de l'extension
+        window.addEventListener('message', (event) => {
+            if (event.data.source === 'aegisscan-extension') {
+                log(`Message reçu de l'extension: ${event.data.type}`);
+            }
+        });
+
+        // Vérification automatique au chargement
+        window.addEventListener('load', () => {
+            log('Page de test chargée');
+            setTimeout(() => {
+                checkExtension();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

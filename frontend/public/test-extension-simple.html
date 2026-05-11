@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Extension Simple</title>
+</head>
+<body>
+    <h1>Test Extension AegisScan</h1>
+    <div id="status">Vérification...</div>
+    <button onclick="testExtension()">Tester Extension</button>
+    
+    <script>
+        function testExtension() {
+            console.log('Test de l\'extension...');
+            console.log('window.__linkGuardActive:', window.__linkGuardActive);
+            console.log('chrome:', typeof chrome);
+            console.log('chrome.runtime:', typeof chrome?.runtime);
+            console.log('chrome.runtime.id:', chrome?.runtime?.id);
+            
+            document.getElementById('status').innerHTML = `
+                Extension active: ${!!window.__linkGuardActive}<br>
+                Chrome API: ${typeof chrome !== 'undefined'}<br>
+                Runtime: ${typeof chrome?.runtime !== 'undefined'}<br>
+                Runtime ID: ${chrome?.runtime?.id || 'Non disponible'}
+            `;
+        }
+        
+        // Test automatique au chargement
+        setTimeout(testExtension, 1000);
+        
+        // Écouter les messages de l'extension
+        window.addEventListener('message', (event) => {
+            if (event.data.source === 'aegisscan-extension') {
+                console.log('Message de l\'extension:', event.data);
+                document.getElementById('status').innerHTML += '<br>✅ Extension détectée !';
+            }
+        });
+    </script>
+</body>
+</html>

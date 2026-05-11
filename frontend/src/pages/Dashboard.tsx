@@ -8,7 +8,8 @@ import { extensionSync } from "../services/extensionSync";
 import {
     Link as LinkIcon,
     Bug,
-    ShieldAlert,CheckCircle2
+    ShieldAlert,
+    CheckCircle2
 } from "lucide-react";
 
 // 1. Définition des structures de données
@@ -53,88 +54,20 @@ export default function Dashboard() {
     const [urlInput, setUrlInput] = useState("");
     const [analyses, setAnalyses] = useState<any[]>([]);
     const [user, setUser] = useState<{ username: string } | null>(null);
-    
-    // NOUVEAU : États pour les stats venant du backend
+
+    // État pour les stats venant du backend
     const [stats, setStats] = useState<UserStats>({
         totalLinks: 0,
         threatsDetected: 0
     });
 
-    // Chargement initial des données
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        const savedUser = localStorage.getItem("user");
-        if (savedUser) setUser(JSON.parse(savedUser));
+    // État pour le statut de l'extension
+    const [extensionStatus, setExtensionStatus] = useState({
+        available: false,
+        synced: false
+    });
 
-        const fetchData = async () => {
-            if (!token) return;
-
-        // Vérifier le statut de l'extension
-        const checkExtensionStatus = () => {
-            const status = extensionSync.getStatus();
-            setExtensionStatus({
-                available: status.extensionAvailable,
-                synced: status.extensionAvailable
-            });
-        };
-
-        // Forcer une détection au montage du composant
-        extensionSync.forceDetection().then(() => {
-            checkExtensionStatus();
-        });
-        
-        // Vérifier périodiquement
-        const statusInterval = setInterval(checkExtensionStatus, 3000);
-
-        const fetchHistory = async () => {
-            const token = localStorage.getItem('token');
-            try {
-                // Appel 1 : Historique pour le tableau
-                const resHistory = await fetch('http://localhost:3000/analyse-lien/historique', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                // Appel 2 : Statistiques pour les compteurs
-                const resStats = await fetch('http://localhost:3000/stats', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (resHistory.ok) {
-                    const data: AnalyseData[] = await resHistory.json();
-                    const formattedData = data.map(item => ({
-                        url: item.lien.url,
-                        date: new Date(item.date_analyse).toLocaleString(),
-                        risk: item.niveau_risque.toLowerCase(),
-                        status: item.statut.charAt(0).toUpperCase() + item.statut.slice(1)
-                    }));
-                    setAnalyses(formattedData);
-                }
-
-                if (resStats.ok) {
-                    const statsData = await resStats.json();
-                    setStats({
-                        totalLinks: statsData.totalLinks,
-                        threatsDetected: statsData.threatsDetected
-                    });
-                }
-            } catch (error) {
-                console.error("Erreur de récupération des données:", error);
-            }
-        };
-
-        fetchData();
-        fetchHistory();
-
-        const handleHistoryUpdated = () => fetchHistory();
-        window.addEventListener('history-updated', handleHistoryUpdated);
-
-        return () => {
-            clearInterval(statusInterval);
-            window.removeEventListener('history-updated', handleHistoryUpdated);
-        };
-    }, []);
-
-    // Fonction d'actualisation des stats après une action
+    // ─── Fonction utilitaire : récupérer les stats ─────────────────────────────
     const refreshStats = async () => {
         const token = localStorage.getItem('token');
         try {
@@ -148,9 +81,81 @@ export default function Dashboard() {
                     threatsDetected: data.threatsDetected
                 });
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error('Erreur lors du rafraîchissement des stats', e);
+        }
     };
 
+    // ─── Fonction utilitaire : récupérer l'historique + stats ─────────────────
+    const fetchHistory = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            const resHistory = await fetch('http://localhost:3000/analyse-lien/historique', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const resStats = await fetch('http://localhost:3000/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (resHistory.ok) {
+                const data: AnalyseData[] = await resHistory.json();
+                const formattedData = data.map(item => ({
+                    url: item.lien.url,
+                    date: new Date(item.date_analyse).toLocaleString(),
+                    risk: item.niveau_risque.toLowerCase(),
+                    status: item.statut.charAt(0).toUpperCase() + item.statut.slice(1)
+                }));
+                setAnalyses(formattedData);
+            }
+
+            if (resStats.ok) {
+                const statsData = await resStats.json();
+                setStats({
+                    totalLinks: statsData.totalLinks,
+                    threatsDetected: statsData.threatsDetected
+                });
+            }
+        } catch (error) {
+            console.error("Erreur de récupération des données:", error);
+        }
+    };
+
+    // ─── Chargement initial ───────────────────────────────────────────────────
+    useEffect(() => {
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) setUser(JSON.parse(savedUser));
+
+        // Vérifier le statut de l'extension
+        const checkExtensionStatus = () => {
+            const status = extensionSync.getStatus();
+            setExtensionStatus({
+                available: status.extensionAvailable,
+                synced: status.extensionAvailable
+            });
+        };
+
+        // Forcer une détection au montage
+        extensionSync.forceDetection().then(() => {
+            checkExtensionStatus();
+        });
+
+        // Vérifier périodiquement
+        const statusInterval = setInterval(checkExtensionStatus, 3000);
+
+        // Charger les données initiales
+        fetchHistory();
+
+        // Écouter les mises à jour d'historique
+        const handleHistoryUpdated = () => fetchHistory();
+        window.addEventListener('history-updated', handleHistoryUpdated);
+
+        return () => {
+            clearInterval(statusInterval);
+            window.removeEventListener('history-updated', handleHistoryUpdated);
+        };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ─── Handler : analyser un lien manuellement ─────────────────────────────
     const handleAnalyze = async () => {
         if (!urlInput) return alert("Veuillez entrer une URL");
 
@@ -181,7 +186,7 @@ export default function Dashboard() {
 
                 setAnalyses(prev => [newEntry, ...prev]);
                 setUrlInput("");
-                // On rafraîchit les compteurs SQL en haut
+                // Rafraîchir les compteurs
                 await refreshStats();
             } else {
                 if (response.status === 401) alert("Session expirée.");
@@ -203,11 +208,10 @@ export default function Dashboard() {
 
     return (
         <MainLayout title={`Bonjour, ${user?.username || 'Utilisateur'} !`} subtitle="Voici un aperçu de votre sécurité.">
-        <MainLayout title={`Bonjour, ${user?.username || 'Utilisateur'} !`} subtitle="Voici un aperçu de votre sécurité.">
             {/* Indicateur de statut de l'extension */}
             <div className={`mb-4 p-3 rounded-lg border ${
-                extensionStatus.available 
-                    ? 'bg-green-50 border-green-200' 
+                extensionStatus.available
+                    ? 'bg-green-50 border-green-200'
                     : 'bg-orange-50 border-orange-200'
             }`}>
                 <div className="flex items-center gap-3">
@@ -218,15 +222,15 @@ export default function Dashboard() {
                         <p className={`text-sm font-medium ${
                             extensionStatus.available ? 'text-green-800' : 'text-orange-800'
                         }`}>
-                            {extensionStatus.available 
-                                ? '🛡️ Protection automatique active' 
+                            {extensionStatus.available
+                                ? '🛡️ Protection automatique active'
                                 : '⚠️ Extension navigateur non détectée'
                             }
                         </p>
                         <p className={`text-xs ${
                             extensionStatus.available ? 'text-green-600' : 'text-orange-600'
                         }`}>
-                            {extensionStatus.available 
+                            {extensionStatus.available
                                 ? 'Tous vos clics sur des liens sont automatiquement analysés'
                                 : "Installez l'extension pour une protection automatique"
                             }
@@ -234,7 +238,7 @@ export default function Dashboard() {
                     </div>
                     {!extensionStatus.available && (
                         <div className="flex gap-2">
-                            <button 
+                            <button
                                 onClick={async (event) => {
                                     const button = event.target as HTMLButtonElement;
                                     button.textContent = 'Détection...';
@@ -242,8 +246,17 @@ export default function Dashboard() {
                                     try {
                                         const detected = await extensionSync.forceDetection();
                                         button.textContent = detected ? 'Détectée !' : 'Non trouvée';
-                                        setTimeout(() => { button.textContent = 'Détecter'; button.disabled = false; }, 2000);
-                                    } catch { button.textContent = 'Erreur'; setTimeout(() => { button.textContent = 'Détecter'; button.disabled = false; }, 2000); }
+                                        setTimeout(() => {
+                                            button.textContent = 'Détecter';
+                                            button.disabled = false;
+                                        }, 2000);
+                                    } catch {
+                                        button.textContent = 'Erreur';
+                                        setTimeout(() => {
+                                            button.textContent = 'Détecter';
+                                            button.disabled = false;
+                                        }, 2000);
+                                    }
                                 }}
                                 className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                             >
@@ -256,83 +269,75 @@ export default function Dashboard() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-3 gap-5 mb-6">
-                <StatCard 
-                    title="Liens analysés" 
-                    value={stats.totalLinks} 
-                    subtitle="Total des URL vérifiées" 
-                    icon={LinkIcon} 
-                    iconColor="#4a8a9a" 
+                <StatCard
+                    title="Liens analysés"
+                    value={stats.totalLinks}
+                    subtitle="Total des URL vérifiées"
+                    icon={LinkIcon}
+                    iconColor="#4a8a9a"
                 />
-                <StatCard 
-                    title="Liens bloqués" 
-                    value={stats.threatsDetected} 
-                    subtitle="Accès malveillant empêchés" 
-                    icon={ShieldBlockIcon as any} 
-                    iconColor="#1a9a7a" 
+                <StatCard
+                    title="Liens bloqués"
+                    value={stats.threatsDetected}
+                    subtitle="Accès malveillant empêchés"
+                    icon={ShieldBlockIcon as any}
+                    iconColor="#1a9a7a"
                 />
-                <StatCard 
-                    title="Menaces détectées" 
-                    value={stats.threatsDetected} 
-                    subtitle="Vulnérabilités identifiées" 
-                    icon={Bug} 
-                    iconColor="#1a9a7a" 
+                <StatCard
+                    title="Menaces détectées"
+                    value={stats.threatsDetected}
+                    subtitle="Vulnérabilités identifiées"
+                    icon={Bug}
+                    iconColor="#1a9a7a"
                 />
             </div>
 
             <div className="content-grid">
-                {/* <div className="subscription-card">
+                {/* Abonnement */}
+                <div className="subscription-card">
                     <div className="subscription-header">
                         <h3>Statut d'abonnement</h3>
                         <span className="badge">Freemium</span>
                     </div>
-                    <p className="subscription-description">Plan actuel : Protection essentielle.</p>
+
+                    <p style={{
+                        fontSize: "0.95rem",
+                        lineHeight: "1.5",
+                        color: "#374151",
+                        marginBottom: "15px"
+                    }}>
+                        Votre plan actuel offre une protection essentielle.
+                        Passer au premium pour des fonctionnalités avancées.
+                    </p>
+
+                    <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px 0" }}>
+                        {[
+                            "Analyse de liens en temps réel",
+                            "Alertes de sécurité de base",
+                            "Assistance IA"
+                        ].map((feature, index) => (
+                            <li key={index} style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                fontSize: "0.85rem",
+                                color: "#4b5563",
+                                marginBottom: "10px",
+                                paddingRight: "5px"
+                            }}>
+                                {feature}
+                                <CheckCircle2
+                                    size={14}
+                                    style={{ color: "#10b981", flexShrink: 0 }}
+                                />
+                            </li>
+                        ))}
+                    </ul>
+
                     <button className="upgrade-button">Passer au premium</button>
-                </div> */}
+                </div>
 
-                    <div className="subscription-card">
-    <div className="subscription-header">
-        <h3>Statut d'abonnement</h3>
-        <span className="badge">Freemium</span>
-    </div>
-    
-    <p style={{
-        fontSize: "0.95rem",
-        lineHeight: "1.5",
-        color: "#374151",
-        marginBottom: "15px"
-    }}>
-        Votre plan actuel offre une protection essentielle. 
-        Passer au premium pour des fonctionnalités avancées.
-    </p>
-
-    {/* Liste des fonctionnalités sans fichier CSS */}
-    <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px 0" }}>
-        {[
-            "Analyse de liens en temps réel",
-            "Alertes de sécurité de base",
-            "Assistance IA"
-        ].map((feature, index) => (
-            <li key={index} style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between", // Pousse l'icône à droite
-                fontSize: "0.85rem",
-                color: "#4b5563",
-                marginBottom: "10px",
-                paddingRight: "5px"
-            }}>
-                {feature}
-                <CheckCircle2 
-                    size={14} // Taille réduite pour plus de finesse
-                    style={{ color: "#10b981", flexShrink: 0 }} 
-                />
-            </li>
-        ))}
-    </ul>
-
-    <button className="upgrade-button">Passer au premium</button>
-</div>
-                {/* Analysis Table - Limitée à 7 lignes via .slice(0, 7) */}
+                {/* Tableau des analyses */}
                 <div className="analysis-card">
                     <div className="analysis-header">
                         <h3>Dernières analyses</h3>
@@ -347,7 +352,6 @@ export default function Dashboard() {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* On ne change pas l'état 'analyses', on limite juste la vue ici */}
                             {analyses.slice(0, 7).map((item, index) => (
                                 <tr key={index}>
                                     <td>
@@ -374,7 +378,6 @@ export default function Dashboard() {
                                     </td>
                                 </tr>
                             ))}
-                            {/* Optionnel : Afficher un message si aucune analyse n'est présente */}
                             {analyses.length === 0 && !isLoading && (
                                 <tr>
                                     <td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
@@ -387,6 +390,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* Analyse rapide */}
             <div className="quick-analysis">
                 <h3>Analyse rapide</h3>
                 <div className="analysis-input-wrapper">

@@ -49,10 +49,20 @@ export default function Login() {
       // 2. On stocke l'ID utilisateur SEUL (C'est ce que ton Quiz.tsx va chercher)
       localStorage.setItem("user_id", data.user.id);
 
-      // 3. Synchroniser le token avec l'extension navigateur
+      // 3. Synchroniser le token avec l'extension navigateur (mode web)
       await extensionSync.syncToken(data.access_token);
 
-      // 4. Redirection vers le dashboard
+      // 4. Pont Tauri → Extension : dépôt du token sur le backend pour que
+      //    le background script de l'extension le récupère automatiquement
+      try {
+        fetch('http://localhost:3000/auth/extension-bridge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: data.access_token })
+        });
+      } catch (e) { /* silencieux */ }
+
+      // 5. Redirection vers le dashboard
       navigate("/dashboard");
 
     } catch (err: any) {

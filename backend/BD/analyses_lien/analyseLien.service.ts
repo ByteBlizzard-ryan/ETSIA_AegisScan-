@@ -6,13 +6,22 @@ import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { Lien } from 'BD/liens/liens.entity';
 import { AnalysesLien, NiveauRisque, StatutAnalyse } from 'BD/analyses_lien/analyses_lien.entity';
-
-// ... (imports identiques)
+import { performance } from 'perf_hooks';
 
 @Injectable()
 export class AnalyseLienService {
+
   getStatistics(id_utilisateur: any) {
-    throw new Error('Method not implemented.');
+    // Retourne quelques statistiques rapides pour le tableau de bord
+    // total analyses, nombre de liens dangereux, suspect et sûrs
+    return this.analyseRepo
+      .createQueryBuilder('analyse')
+      .select('COUNT(analyse.id_analyse)', 'total')
+      .addSelect("SUM(CASE WHEN analyse.niveau_risque = 'DANGEREUX' THEN 1 ELSE 0 END)", 'dangerous')
+      .addSelect("SUM(CASE WHEN analyse.niveau_risque = 'SUSPECT' THEN 1 ELSE 0 END)", 'suspect')
+      .addSelect("SUM(CASE WHEN analyse.niveau_risque = 'SUR' THEN 1 ELSE 0 END)", 'safe')
+      .where('analyse.utilisateur = :uid', { uid: id_utilisateur })
+      .getRawOne();
   }
   constructor(
     @InjectRepository(Lien)
@@ -211,9 +220,40 @@ export class AnalyseLienService {
   async getUserHistory(userId: string) {
     return await this.analyseRepo.find({
       where: { utilisateur: { id_utilisateur: userId } },
-      relations: ['lien'], // Pour récupérer l'objet 'lien' et donc son URL
-      order: { date_analyse: 'DESC' }, // Les plus récentes en premier
-      take: 10 // Limiter aux 10 dernières par exemple
+      relations: ['lien'],
+      order: { date_analyse: 'DESC' },
+      take: 10
     });
   }
-}
+
+  // Détails complets d'un lien spécifique pour le modal
+  async getLinkDetails(linkId: string, userId: string) {
+    return await this.analyseRepo.find({
+      where: {
+        lien: { id_lien: linkId },
+        utilisateur: { id_utilisateur: userId }
+      },
+      relations: ['lien', 'utilisateur'],
+      order: { date_analyse: 'DESC' }
+    });
+  }
+
+  // Statistiques globales de l'utilisateur (totalLinks, threatsDetected)
+  async getUserStats(userId: string) {
+    const total = await this.analyseRepo.count({
+      where: { utilisateur: { id_utilisateur: userId } }
+    });
+
+    const threats = await this.analyseRepo.count({
+      where: {
+        utilisateur: { id_utilisateur: userId },
+        niveau_risque: NiveauRisque.DANGEREUX
+      }
+    });
+
+    return {
+      totalLinks: total,
+      threatsDetected: threats
+    };
+  }
+}
